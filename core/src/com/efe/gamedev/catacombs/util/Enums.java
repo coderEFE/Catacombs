@@ -28,4 +28,13 @@ public class Enums {
         TRIANGLE,
         CIRCLE
     }
+    //Guard states
+    public enum GuardState {
+        PATROLLING,
+        ALERT,
+        ATTACK,
+        UNSURE,
+        FIGHT,
+        DEFEATED
+    }
 }

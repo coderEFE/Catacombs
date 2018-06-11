@@ -22,8 +22,9 @@ public class Word {
     private Array<Boolean> collected;
     private float countdown;
     private boolean isAWord;
-    private boolean notAWord;
+    //private boolean notAWord;
     private Level level;
+    public boolean solved;
 
     public Word (String[] letters, Vector2[] letterPositions, Level level) {
         this.letters = letters;
@@ -34,15 +35,16 @@ public class Word {
             collected.add(false);
         }
         countdown = 0;
-        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD"));
-        notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
+        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT"));
+        //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         this.level = level;
+        solved = false;
     }
 
     public void renderText (SpriteBatch batch, BitmapFont font) {
         //update word standards
-        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD"));
-        notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
+        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT"));
+        //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         //draw letters and check if they have been collected
         for (int i = 0; i < letters.length; i++) {
             if (level.touchPosition.dst(letterPositions[i]) < 12 && !collected.get(i)) {
@@ -54,7 +56,7 @@ public class Word {
             }
         }
         //check if the letters collected make a word together
-        if ((notAWord && collectedString.length() == letters.length)) {
+        if ((!isAWord && collectedString.length() == letters.length)) {
             if (countdown < 51) {
                 countdown++;
             } else {
@@ -85,16 +87,20 @@ public class Word {
                 if (collectedString.equals("GOLD")) {
                     level.inventory.inventoryItems.add(new Item(new Vector2(), level.viewportPosition, "gold"));
                 }
+                if (collectedString.equals("EXIT")) {
+                    level.exitDoor.show = true;
+                }
             }
         }
     }
     public void renderCollectedText (SpriteBatch batch, BitmapFont font, Viewport hudViewport) {
         if (countdown > 1) {
-            if ((notAWord && collectedString.length() == letters.length)) {
+            if ((!isAWord && collectedString.length() == letters.length)) {
                 font.setColor(Color.RED);
             }
             if (isAWord) {
                 font.setColor(Color.GOLD);
+                solved = true;
             }
         }
         else {

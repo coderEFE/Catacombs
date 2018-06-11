@@ -9,6 +9,7 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 1/16/2018.
+ * Puzzles for player to solve
  */
 
 public class Puzzle {

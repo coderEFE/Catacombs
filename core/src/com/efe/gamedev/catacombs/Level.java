@@ -33,6 +33,8 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 11/17/2017.
+ * A Level is a big function that has a TouchDown and TouchUp function which use an InputAdapter to tell if someone is touching the screen or not and sends the results to various Java classes in the game, such as Player, Item, ect.
+ * A Level has an Update function, Render function, RenderHUD function (pause menu, torch light background, alarm effect), RenderText (Words on screen), and RenderWords (renders words for a type of puzzle called Words). These functions render words and shapes and update variables for functions in the game.
  */
 
 public class Level extends InputAdapter {
@@ -45,7 +47,7 @@ public class Level extends InputAdapter {
     //viewport
     public Viewport viewport;
     //hudViewport
-    public Viewport hudViewport;
+    private Viewport hudViewport;
     //viewport touch position
     public Vector2 viewportPosition;
     //seperate touch position for buttons and things
@@ -73,6 +75,8 @@ public class Level extends InputAdapter {
     public int currentCatacomb;
     //items
     public DelayedRemovalArray<Item> items;
+    public boolean[] collectedItems = new boolean[]{false, false, false, false, false, false};
+    public Array<String> collectedItemTypes;
     //player's Inventory
     public Inventory inventory;
     //Chests
@@ -92,6 +96,10 @@ public class Level extends InputAdapter {
     private static final float TORCH_MOVEMENT_DISTANCE = 5;
     private static final float TORCH_PERIOD = 2f;
     public boolean levelStarted = false;
+    //alarm
+    public boolean alarm;
+    private float alarmLight;
+    public boolean shake;
 
     public Level (Viewport hudViewport, Levels superior) {
         this.superior = superior;
@@ -101,8 +109,12 @@ public class Level extends InputAdapter {
         touchPosition = new Vector2();
         lookPosition = new Vector2();
         touchLocked = true;
-
+        //initiate some stuff
         this.hudViewport = hudViewport;
+        alarm = false;
+        shake = false;
+        collectedItemTypes = new Array<String>();
+        collectedItemTypes.add("key"); collectedItemTypes.add("dagger"); collectedItemTypes.add("gold"); collectedItemTypes.add("phone"); collectedItemTypes.add("diamond"); collectedItemTypes.add("stungun");
 
         victory = false;
         defeat = false;
@@ -122,7 +134,7 @@ public class Level extends InputAdapter {
         if (!touchLocked && player.jumpState == Enums.JumpState.GROUNDED) {
             viewportPosition = viewport.unproject(new Vector2(screenX, screenY));
         }
-            touchPosition = viewport.unproject(new Vector2(screenX, screenY));
+        touchPosition = viewport.unproject(new Vector2(screenX, screenY));
         //give objects and player the touch position when player touches screen
         player.viewportPosition = viewportPosition;
         for (Item item : items) {
@@ -138,9 +150,26 @@ public class Level extends InputAdapter {
             currentBubble += 1;
         }
         //check to see if you want the player to jump when you tap on the screen.
-        if (!touchLocked && !inventory.paused) {player.tryJumping();}
-        if (!inventory.paused) {speechBubbles.get(currentBubble).trySelecting();}
+        if (!touchLocked && !inventory.paused) {
+            player.tryJumping();
+        }
+        if (!inventory.paused) {
+            speechBubbles.get(currentBubble).trySelecting();
+        }
 
+        //fight with guard
+        for (int i = 0; i < guards.size; i++) {
+            if (guards.get(i).guardState == Enums.GuardState.FIGHT && touchPosition.x > (guards.get(i).position.x - Constants.HEAD_SIZE) && touchPosition.x < (guards.get(i).position.x - Constants.HEAD_SIZE) + (Constants.PLAYER_WIDTH * 2f) && touchPosition.y > (guards.get(i).position.y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f) && touchPosition.y < (guards.get(i).position.y + Constants.HEAD_SIZE) && guards.get(i).guardEnergy > 0) {
+                guards.get(i).guardEnergy -= 1;
+            }
+        }
+
+        if (superior.currentLevel == 5 && currentBubble == 35) {
+            if (touchPosition.x > this.getPlayer().getPosition().x - Constants.HEAD_SIZE && touchPosition.x < (this.getPlayer().getPosition().x - Constants.HEAD_SIZE) + Constants.PLAYER_WIDTH * 2f && touchPosition.y > this.getPlayer().getPosition().y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f && touchPosition.y < this.getPlayer().getPosition().y + Constants.HEAD_SIZE && player.energy > 0 && !player.recoverE) {
+                player.duck = true;
+            }
+        }
+        //returns the position at which your finger touches device screen
         return super.touchDown(screenX, screenY, pointer, button);
     }
 
@@ -148,46 +177,60 @@ public class Level extends InputAdapter {
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
 
         lookPosition = viewport.unproject(new Vector2(screenX, screenY));
-
+        //makes it so that in level 6, at a certain spot in the level, when you stop touching the player, it stops ducking lasers.
+        if (superior.currentLevel == 5 && currentBubble == 35) {
+            player.duck = false;
+        }
+        //returns the position at which your finger stops touching device screen
         return super.touchUp(screenX, screenY, pointer, button);
     }
 
     public void update (float delta) {
+        //update most things when you have not won or lost and the game is not paused
         if (!victory && !defeat && !inventory.paused) {
-            player.update(delta);
-            exitDoor.update(delta);
-            if (targetBox.target) {
-                targetBox.update();
-            }
-            if (!targetBox.target) {
-                targetBox.startTime = TimeUtils.nanoTime();
-            }
-            if (show) {
-                speechBubbles.get(currentBubble).update();
-            }
-            for (Chest chest : chests) {
-                chest.update();
-            }
-            //set some stuff and check if speechBubbles are triggered
-            if (speechBubbles.get(currentBubble).triggered) {
-                speechBubbles.get(currentBubble).function4.run();
-            }
-
-            for (int i = 0; i < items.size; i++) {
-                Item item = items.get(i);
-                item.shadowOffset.set(new Vector2((player.getPosition().x - item.position.x) / -10, -2));
-                //if collected, let score or inventory pick it up
-                if (item.collected) {
-                    if (item.itemType.equals("diamond")) {
-                        inventory.scoreDiamonds.add(new Diamond(new Vector2()));
-                    } else {
-                        inventory.inventoryItems.add(new Item(new Vector2(item.position.x, item.position.y), viewportPosition, item.itemType));
-                    }
-                    items.removeIndex(i);
+            //if you are not looking at info about a new item, update stuff
+            if (!inventory.newItem) {
+                //player, guards, exit, targetBox (tutorial stuff), speechbubbles, chests, ect...
+                player.update(delta);
+                for (Guard guard : guards) {
+                    guard.update(delta);
                 }
-            }
-            for (Catacomb catacomb : catacombs) {
-                catacomb.update(delta);
+                exitDoor.update(delta);
+                if (targetBox.target) {
+                    targetBox.update();
+                }
+                if (!targetBox.target) {
+                    targetBox.startTime = TimeUtils.nanoTime();
+                }
+                if (show) {
+                    speechBubbles.get(currentBubble).update();
+                }
+                for (Chest chest : chests) {
+                    chest.update();
+                }
+                //set some stuff and check if speechBubbles are triggered
+                if (speechBubbles.get(currentBubble).triggered) {
+                    speechBubbles.get(currentBubble).function4.run();
+                }
+
+                for (int i = 0; i < items.size; i++) {
+                    Item item = items.get(i);
+                    //set item shadow positions
+                    item.shadowOffset.set(new Vector2((player.getPosition().x - item.position.x) / -10, -2));
+                    //if collected, let score or inventory pick it up
+                    if (item.collected) {
+                        //if diamond, add to ScoreDiamonds (records how many diamonds you have collected in the level), else, add to inventory items
+                        if (item.itemType.equals("diamond")) {
+                            inventory.scoreDiamonds.add(new Diamond(new Vector2()));
+                        } else {
+                            inventory.inventoryItems.add(new Item(new Vector2(item.position.x, item.position.y), viewportPosition, item.itemType));
+                        }
+                        items.removeIndex(i);
+                    }
+                }
+                for (Catacomb catacomb : catacombs) {
+                    catacomb.update(delta);
+                }
             }
             inventory.update();
             //update torch light
@@ -198,6 +241,10 @@ public class Level extends InputAdapter {
                 levelStarted = true;
                 updateTorch();
             }
+        }
+        //update alarm light
+        if (alarm) {
+            updateAlarm();
         }
         inventory.updatePause();
         if (victory || defeat) {
@@ -218,25 +265,25 @@ public class Level extends InputAdapter {
         //make torch light flicker
         torchLight = 60f + TORCH_MOVEMENT_DISTANCE * MathUtils.sin(MathUtils.PI2 * cyclePosition);
     }
+    //very similar function for alarm
+    private void updateAlarm () {
+        //one line version of the previous function
+        alarmLight = 150f + 50 * MathUtils.sin(MathUtils.PI2 * (((MathUtils.nanoToSec * (TimeUtils.nanoTime() - startTime)) / 1f) % 1));
+    }
 
     public void render (ShapeRenderer renderer) {
         //apply viewport
         viewport.apply();
-        //draw player, catacombs, others
-        renderer.setProjectionMatrix(viewport.getCamera().combined);
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        //catacombs
-        for (Catacomb catacomb : catacombs) {
-            catacomb.render(renderer);
-        }
-        renderer.end();
 
         //draw stuff with special blends to enable color alpha changes
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         renderer.setProjectionMatrix(viewport.getCamera().combined);
         renderer.begin(ShapeRenderer.ShapeType.Filled);
+        //catacombs
+        for (Catacomb catacomb : catacombs) {
+            catacomb.render(renderer);
+        }
         //render exit
         exitDoor.render(renderer);
         if (!exitDoor.unlocked) {
@@ -262,7 +309,7 @@ public class Level extends InputAdapter {
         }
         //items
         for (Item item : items) {
-            item.render(renderer);
+            item.render(renderer, this);
         }
         //chests
         for (Chest chest : chests) {
@@ -289,7 +336,15 @@ public class Level extends InputAdapter {
         //torch light
         renderer.set(ShapeRenderer.ShapeType.Filled);
         for (int i = 0; i < viewport.getWorldWidth() / 4f; i+=1) {
-            rectBorder(renderer, new Vector2(player.getPosition().x - (i * 2) - Constants.HEAD_SIZE, player.getPosition().y - (i * 2) - Constants.HEAD_SIZE), 20 + (i * 4), 10 + (i * 4), i / (torchLight));
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, i / (torchLight)));
+            rectBorder(renderer, new Vector2(player.getPosition().x - (i * 2) - Constants.HEAD_SIZE, player.getPosition().y - (i * 2) - Constants.HEAD_SIZE), 20 + (i * 4), 10 + (i * 4));
+        }
+        //alarm
+        if (alarm) {
+            for (int i = 47; i < viewport.getWorldWidth() / 4f; i+=1) {
+                renderer.setColor(new Color(Color.RED.r, Color.RED.g, Color.RED.b, (i / alarmLight) - (30 / i)));
+                rectBorder(renderer, new Vector2((player.getPosition().x - (i * 2) - Constants.HEAD_SIZE - 2) - ((viewport.getWorldWidth() - 213) * 0.5f), (player.getPosition().y - (i * 2) - Constants.HEAD_SIZE) + 28), (viewport.getWorldWidth() - 193) + (i * 4), -40 + (i * 4));
+            }
         }
         if (targetBox.target && !inventory.paused) {
             targetBox.render(renderer);
@@ -300,7 +355,7 @@ public class Level extends InputAdapter {
             //pause
             inventory.renderPause(renderer);
             //speechBubbles
-            if (show && !inventory.paused) {
+            if (show && !inventory.paused && !inventory.newItem) {
                 speechBubbles.get(currentBubble).renderBubble(renderer);
             }
         }
@@ -312,8 +367,7 @@ public class Level extends InputAdapter {
     }
 
     //draws an unfilled rectangle but with a thick translucent border
-    private void rectBorder (ShapeRenderer renderer, Vector2 shapePosition, float shapeWidth, float shapeHeight, float colorIncrement) {
-        renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, colorIncrement));
+    private void rectBorder (ShapeRenderer renderer, Vector2 shapePosition, float shapeWidth, float shapeHeight) {
         renderer.rectLine(shapePosition.x, shapePosition.y, shapePosition.x + shapeWidth, shapePosition.y, 4);
         renderer.rectLine(shapePosition.x + shapeWidth, shapePosition.y, shapePosition.x + shapeWidth, shapePosition.y + shapeHeight, 4);
         renderer.rectLine(shapePosition.x + shapeWidth, shapePosition.y + shapeHeight, shapePosition.x, shapePosition.y + shapeHeight, 4);
@@ -323,7 +377,7 @@ public class Level extends InputAdapter {
     public void renderText (SpriteBatch batch, BitmapFont font, BitmapFont font2) {
         if (!victory && !defeat) {
             //speechBubble text
-            if (show && !inventory.paused) {
+            if (show && !inventory.paused && !inventory.newItem) {
                 speechBubbles.get(currentBubble).renderText(batch, font, hudViewport);
             }
             //TODO: Make it so the player can make a custom name for the character
@@ -331,15 +385,25 @@ public class Level extends InputAdapter {
                 if (speechBubbles.get(currentBubble).textLoaded) {
                     player.mouthState = Enums.MouthState.NORMAL;
                 } else {
-                    if (inventory.speechButton.speech) {
+                    if (inventory.speechButton.speech && show) {
                         player.mouthState = Enums.MouthState.TALKING;
                     } else {
                         player.mouthState = Enums.MouthState.NORMAL;
                     }
                 }
             }
+            //guards talking states
+            for (int i = 0; i < guards.size; i++) {
+                if (show && speechBubbles.get(currentBubble).target.equals("Guard " + (i+1) + ":")) {
+                    if (speechBubbles.get(currentBubble).textLoaded) {
+                        guards.get(i).mouthState = Enums.MouthState.NORMAL;
+                    } else {
+                        guards.get(i).mouthState = Enums.MouthState.TALKING;
+                    }
+                }
+            }
         }
-        if (inventory.paused) {
+        if (inventory.paused || inventory.newItem) {
             inventory.renderText(batch, font2, font, hudViewport);
         }
         if (victory || defeat) {

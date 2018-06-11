@@ -15,6 +15,8 @@ import com.efe.gamedev.catacombs.items.Diamond;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
+import java.util.Locale;
+
 /**
  * Created by coder on 11/24/2017.
  * This is the Player's Inventory where the Player holds his/her items.
@@ -47,6 +49,13 @@ public class Inventory {
     //keep track of diamonds
     public DelayedRemovalArray<Diamond> scoreDiamonds;
 
+    //new items
+    public boolean newItem;
+    public String newItemType;
+    private Item newCollectedItem;
+    private float newItemTimer;
+    private float newItemOpactiy;
+
     public Inventory (final Level level) {
         this.level = level;
         position = new Vector2();
@@ -56,6 +65,11 @@ public class Inventory {
         viewportPosition = level.viewportPosition;
         scoreDiamonds = new DelayedRemovalArray<Diamond>();
         paused = false;
+        newItem = false;
+        newItemType = "";
+        newCollectedItem = new Item(new Vector2(), level.viewportPosition, newItemType);
+        newItemTimer = 0;
+        newItemOpactiy = 1f;
         stage = "Main";
         resetButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Reset", 30, 30, Color.BLUE,
                 new Runnable () {public void run() { stage="ValidateReset"; }},
@@ -90,7 +104,7 @@ public class Inventory {
                         /*TODO: Make a home menu!*/
                     } else if (stage.equals("ValidateSpeech")) {
                         speechButton.speech = !speechButton.speech;
-                        if (!speechButton.speech) {
+                        if (!speechButton.speech && level.superior.currentLevel != 4) {
                             paused = false;
                             level.getPlayer().armRotate = 0;
                             level.getPlayer().legRotate = 170;
@@ -125,10 +139,30 @@ public class Inventory {
     }
 
     public void updatePause () {
+        //pause buttons
         if (paused) {
             resetButton.update();
             homeButton.update();
             playButton.update();
+        }
+        //click on new Item panel
+        if (newItem && level.touchPosition.x > (level.getPlayer().getPosition().x - 86) && level.touchPosition.x < (level.getPlayer().getPosition().x - 86) + 164 && level.touchPosition.y > (level.getPlayer().getPosition().y + 50) && level.touchPosition.y < (level.getPlayer().getPosition().y + 50) + (level.viewport.getWorldHeight() / 8f)) {
+            level.touchPosition = new Vector2();
+            newItem = false;
+        }
+        //flashing triangle for new Item panel
+        if (newItem) {
+            newItemTimer ++;
+            if (newItemTimer > 25) {
+                newItemOpactiy = 0;
+            }
+            if (newItemTimer > 50) {
+                newItemOpactiy = 1f;
+                newItemTimer = 0;
+            }
+        } else {
+            newItemTimer = 0;
+            newItemOpactiy = 1f;
         }
     }
 
@@ -165,7 +199,9 @@ public class Inventory {
             renderer.rectLine(position.x + (selectedItem * (width / inventorySlots)), position.y - height, position.x + (selectedItem * (width / inventorySlots)) + (width / inventorySlots), position.y - height, 2);
             //make player hold the item selected
             if (inventoryItems.size != 0) {
-                level.getPlayer().holdItem(inventoryItems.get(selectedItem).itemType);
+                if (!level.getPlayer().fighting) {
+                    level.getPlayer().holdItem(inventoryItems.get(selectedItem).itemType);
+                }
             } else {
                 level.getPlayer().holdItem("");
             }
@@ -180,7 +216,7 @@ public class Inventory {
         for (Item item : inventoryItems) {
             item.position.set(new Vector2(position.x + (width / 15) + (inventoryItems.indexOf(item, true) * (width / inventorySlots)), (position.y - (height / 2)) + (level.getPlayer().getVelocity().y / 60)));
             item.collected = true;
-            item.render(renderer);
+            item.render(renderer, level);
         }
 
         //draw collected diamonds: MAX DIAMONDS PER LEVEL IS 3.
@@ -191,6 +227,23 @@ public class Inventory {
         //remove a diamond if diamond count is over the MAX_DIAMONDS count of 3
         if (scoreDiamonds.size > Constants.MAX_DIAMONDS) {
             scoreDiamonds.removeIndex(0);
+        }
+        //render information of an item when a new item has been collected.
+        if (newItem) {
+            //box
+            level.getPlayer().resetLegs();
+            renderer.set(ShapeRenderer.ShapeType.Filled);
+            renderer.setColor(new Color(Color.DARK_GRAY.r, Color.DARK_GRAY.g, Color.DARK_GRAY.b, 0.8f));
+            renderer.rect((level.getPlayer().getPosition().x - 86), level.getPlayer().getPosition().y + 50, 164, level.viewport.getWorldHeight() / 8f);
+            renderer.setColor(new Color(Color.DARK_GRAY.r, Color.DARK_GRAY.g, Color.DARK_GRAY.b, 1f));
+            renderer.rect((level.getPlayer().getPosition().x - 86) + 2, level.getPlayer().getPosition().y + 52, (level.viewport.getWorldHeight() / 8f), (level.viewport.getWorldHeight() / 8f) - 4);
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, newItemOpactiy));
+            renderer.triangle(level.getPlayer().getPosition().x - 2, level.getPlayer().getPosition().y + 51, level.getPlayer().getPosition().x + 2, level.getPlayer().getPosition().y + 51, level.getPlayer().getPosition().x, level.getPlayer().getPosition().y + 47);
+            //new item
+            newCollectedItem.position.set(new Vector2((level.getPlayer().getPosition().x - 86) + 6, level.getPlayer().getPosition().y + 60));
+            newCollectedItem.collected = true;
+            newCollectedItem.itemType = newItemType;
+            newCollectedItem.render(renderer, level);
         }
     }
 
@@ -232,8 +285,13 @@ public class Inventory {
                 //map of catacombs
                 for(int i = 0; i < level.catacombs.size; i++) {
                     renderer.setColor(Color.BLUE);
-                    //renderer.circle(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 5, 6);
-                    renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                    if (level.catacombs.get(i).width == 200) {
+                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                    } else {
+                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 3.125f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 6.25f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                    }
                 }
                 renderer.setColor(new Color(Color.BLUE.r / 3f, Color.BLUE.g / 3f, Color.BLUE.b / 3f, 1));
                 renderer.circle(level.getPlayer().getPosition().x + (level.getPlayer().getPosition().x / 16f), level.getPlayer().getPosition().y + (level.getPlayer().getPosition().y / 20f), 1.5f + (playButton.playMove / 40f), 4);
@@ -246,14 +304,40 @@ public class Inventory {
     }
 
     public void renderText (SpriteBatch batch, BitmapFont font, BitmapFont font2, Viewport hudViewport) {
-        font.setColor(Color.BLACK);
-        font.draw(batch, "PAUSED", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f), hudViewport.getWorldHeight() / 1.2f);
-        if (stage.equals("ValidateReset")) {
-            font2.draw(batch, "Would you like to restart the level?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 200f), hudViewport.getWorldHeight() / 1.5f);
-        } else if (stage.equals("ValidateHome")) {
-            font2.draw(batch, "Would you like to exit to home menu?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 210f), hudViewport.getWorldHeight() / 1.5f);
-        } else if (stage.equals("ValidateSpeech")) {
-            font2.draw(batch, speechButton.speech ? " Would you like to play the\n level without instructions?" : "   Would you like to replay\n the level with instructions?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 170f), hudViewport.getWorldHeight() / 1.5f);
+        if (paused) {
+            font.setColor(Color.BLACK);
+            font.draw(batch, "PAUSED", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f), hudViewport.getWorldHeight() / 1.2f);
+            font2.setColor(Color.WHITE);
+            if (stage.equals("ValidateReset")) {
+                font2.draw(batch, "Would you like to restart the level?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 200f), hudViewport.getWorldHeight() / 1.5f);
+            } else if (stage.equals("ValidateHome")) {
+                font2.draw(batch, "Would you like to exit to home menu?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 210f), hudViewport.getWorldHeight() / 1.5f);
+            } else if (stage.equals("ValidateSpeech")) {
+                font2.draw(batch, speechButton.speech ? " Would you like to play the\n level without instructions?" : "   Would you like to replay\n the level with instructions?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 170f), hudViewport.getWorldHeight() / 1.5f);
+            }
+        } else if (newItem) {
+            font2.setColor(Color.GOLD);
+            font2.draw(batch, newItemType.replaceFirst(newItemType.charAt(0)+"", (newItemType.charAt(0)+"").toUpperCase()) + ":", (hudViewport.getWorldWidth() / 4.4f) + ((480 - hudViewport.getWorldHeight()) / 3f) + ((hudViewport.getWorldWidth() - 640) / 4f), hudViewport.getWorldHeight() / 1.1f);
+            font2.setColor(Color.BLACK);
+            font2.draw(batch, itemText(newItemType), (hudViewport.getWorldWidth() / 4.4f) + (18 + (newItemType.length() * 13f)) + ((480 - hudViewport.getWorldHeight()) / 5f) + ((hudViewport.getWorldWidth() - 640) / 4f), hudViewport.getWorldHeight() / 1.1f);
+        }
+    }
+
+    private String itemText (String newItemType) {
+        if (newItemType.equals("key")) {
+            return "Used to lock and unlock doors.";
+        } else if (newItemType.equals("dagger")) {
+            return "A small weapon used for battle.";
+        } else if (newItemType.equals("gold")) {
+            return "This precious item is highly\nprized throughout the Catacombs.";
+        } else if (newItemType.equals("phone")) {
+            return "A small device carried by Guards.";
+        } else if (newItemType.equals("diamond")) {
+            return "This jewel is used as currency.";
+        } else if (newItemType.equals("stungun")) {
+            return "A blaster capable of knocking\nout even the best of Guards.";
+        } else {
+            return "Unknown item...";
         }
     }
 

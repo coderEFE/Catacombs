@@ -51,13 +51,15 @@ public class Button {
 
     public void update () {
         //animate icons
-        if(arrowMove < 0) {
+        if(type.equals("Reset") && arrowMove < 0) {
             arrowMove += 8;
         }
-        if (doorMove < width / 6f) {
+        if (type.equals("Home") && doorMove < width / 6f) {
             doorMove ++;
         }
-        movePlay();
+        if (type.equals("Play")) {
+            movePlay();
+        }
     }
 
     private void movePlay () {

@@ -75,7 +75,7 @@ public class GameplayScreen extends ScreenAdapter {
 
         //allow player to use external touch inputs
         Gdx.input.setInputProcessor(level);
-        chaseCam = new ChaseCam(level.viewport.getCamera(), level.getPlayer());
+        chaseCam = new ChaseCam(level.viewport.getCamera(), level.getPlayer(), level.shake);
     }
 
     @Override
@@ -107,6 +107,7 @@ public class GameplayScreen extends ScreenAdapter {
         levels.update(level);
         level.update(delta);
         chaseCam.update();
+        chaseCam.shake = level.shake;
 
         Gdx.gl.glClearColor(Constants.BACKGROUND_COLOR.r, Constants.BACKGROUND_COLOR.g, Constants.BACKGROUND_COLOR.b, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

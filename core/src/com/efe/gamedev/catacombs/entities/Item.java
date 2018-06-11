@@ -10,6 +10,8 @@ import com.efe.gamedev.catacombs.items.Dagger;
 import com.efe.gamedev.catacombs.items.Diamond;
 import com.efe.gamedev.catacombs.items.Gold;
 import com.efe.gamedev.catacombs.items.Key;
+import com.efe.gamedev.catacombs.items.Phone;
+import com.efe.gamedev.catacombs.items.StunGun;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
@@ -31,9 +33,11 @@ public class Item {
     private float itemSlide;
 
     private Key key;
-    public Diamond diamond;
+    private Diamond diamond;
     private Dagger dagger;
     private Gold gold;
+    private Phone phone;
+    public StunGun stungun;
 
     private long startTime;
     private static final float TARGET_MOVEMENT_DISTANCE = 1.5f;
@@ -54,10 +58,12 @@ public class Item {
         diamond = new Diamond(position);
         dagger = new Dagger(position);
         gold = new Gold(position);
+        phone = new Phone(position);
+        stungun = new StunGun(position);
         startTime = TimeUtils.nanoTime();
     }
 
-    public void render (ShapeRenderer renderer) {
+    public void render (ShapeRenderer renderer, Level level) {
         //if item is key, draw a key
         if (itemType.equals("key")) {
             //set initials
@@ -84,6 +90,8 @@ public class Item {
             //set initials
             itemWidth = dagger.daggerWidth;
             itemHeight = 8;
+            //set item direction
+            dagger.daggerFacing = itemFacing;
             //shadow
             dagger.shadow = !collected;
             dagger.shadowOffset = shadowOffset;
@@ -99,6 +107,27 @@ public class Item {
             gold.shadowOffset = shadowOffset;
             //render gold
             gold.render(renderer);
+        } else if (itemType.equals("phone")) {
+            //if item is phone, draw phone
+            //set initials
+            itemWidth = phone.phoneWidth;
+            itemHeight = 8;
+            //shadow
+            phone.shadow = !collected;
+            phone.shadowOffset = shadowOffset;
+            //render gold
+            phone.render(renderer);
+        } else if (itemType.equals("stungun")) {
+            //set initials
+            itemWidth = stungun.gunWidth;
+            itemHeight = 9;
+            //set item direction
+            stungun.gunFacing = itemFacing;
+            //shadow
+            stungun.shadow = !collected;
+            stungun.shadowOffset = shadowOffset;
+            //render StunGun
+            stungun.render(renderer, level);
         }
 
             if (!targeted) {

@@ -51,13 +51,24 @@ public class Player {
     public float legRotate;
     private static final float LEG_MOVEMENT_DISTANCE = 20;
     private static final float LEG_PERIOD = 1.5f;
+    public boolean moving;
 
     //The item that the player holds
-    private Item heldItem;
-    private Enums.Facing facing;
+    public Item heldItem;
+    public Enums.Facing facing;
+    public boolean hasWeapon;
+    public boolean hasGold;
 
     //rotate arms
     public float armRotate;
+    public boolean fighting;
+    public boolean danger;
+    public float health;
+    public boolean alert;
+    public boolean duck;
+    public boolean useEnergy;
+    public float energy;
+    public boolean recoverE;
 
     public Player (Vector2 position, Vector2 viewportPosition, Level level) {
         //initialize parameters
@@ -82,6 +93,17 @@ public class Player {
         armRotate = 0;
         spawnOpacity = 1;
         spawnTimer = 0;
+        moving = false;
+        hasWeapon = false;
+        hasGold = false;
+        fighting = false;
+        danger = false;
+        health = 20;
+        alert = false;
+        duck = false;
+        useEnergy = true;
+        energy = 20;
+        recoverE = false;
     }
 
     public void update (float delta) {
@@ -133,7 +155,7 @@ public class Player {
                 if (mouthState == Enums.MouthState.NORMAL) {
                     mouthState = Enums.MouthState.OPEN;
                 }
-            } else {
+            } else if (!fighting) {
                 if (armRotate > 0) {
                     armRotate -= 2f;
                 }
@@ -188,7 +210,7 @@ public class Player {
     //find catacomb nearest to player and assign player to it
     private void findNearestCatacomb () {
         for (Catacomb catacomb : level.catacombs) {
-            if (position.dst(new Vector2(catacomb.position.x + catacomb.width / 2, catacomb.position.y + catacomb.width / 2)) < catacomb.width / 2) {
+            if (position.dst(new Vector2(catacomb.position.x + catacomb.width / 2, (catacomb.position.y + catacomb.height / 2) + 50)) < catacomb.width / 2 && position.dst(new Vector2(catacomb.position.x + catacomb.width / 2, (catacomb.position.y + catacomb.height / 2) - 50)) < catacomb.width / 2) {
                 level.currentCatacomb = level.catacombs.indexOf(catacomb,true);
             }
         }
@@ -210,7 +232,21 @@ public class Player {
                     item.itemHeight);
             //if player bounds touches item bounds, remove item.
             if (itemBounds.overlaps(playerBounds)) {
+                if (item.itemType.equals("dagger")) {
+                    hasWeapon = true;
+                }
+                if (item.itemType.equals("gold")) {
+                    hasGold = true;
+                }
                 item.collected = true;
+                //TODO: do this with chest too
+                //if item has not been collected before, pop up a screen telling what item is.
+                if (!level.collectedItems[level.collectedItemTypes.indexOf(item.itemType, true)]) {
+                    level.collectedItems[level.collectedItemTypes.indexOf(item.itemType, true)] = true;
+                    level.touchPosition = new Vector2();
+                    level.inventory.newItemType = item.itemType;
+                    level.inventory.newItem = true;
+                }
             }
         }
     }
@@ -222,13 +258,14 @@ public class Player {
         //set directions and render item accordingly
         if (facing == Enums.Facing.LEFT) {
             heldItem.itemFacing = Enums.Facing.LEFT;
-            heldItem.position.set(new Vector2(position.x - (Constants.PLAYER_WIDTH * 1.2f) - heldItem.itemWidth + (velocity.x / 40), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 5 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60))));
+            heldItem.position.set(new Vector2(heldItem.itemType.equals("dagger") ? (position.x - (Constants.PLAYER_WIDTH * 1.0f) - heldItem.itemWidth + (velocity.x / 40)) : (position.x - (Constants.PLAYER_WIDTH * 1.2f) - heldItem.itemWidth + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60))));
         } else if (facing == Enums.Facing.RIGHT) {
             heldItem.itemFacing = Enums.Facing.RIGHT;
-            heldItem.position.set(new Vector2(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (velocity.x / 40), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 5 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60))));
+            heldItem.position.set(new Vector2(heldItem.itemType.equals("dagger") ? (position.x + (Constants.PLAYER_WIDTH * 0.8f) + (velocity.x / 40)) : (position.x + (Constants.PLAYER_WIDTH * 1.2f) + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60))));
         }
     }
 
+    //when player spawns, its opacity flashes a few times
     public void spawn (){
         if (spawnTimer < 120) {
             spawnTimer++;
@@ -253,18 +290,18 @@ public class Player {
     public void tryJumping () {
         //try jumping right if the player tapped in the upper right corner of the screen
         if (level.touchPosition.y > level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2 && level.touchPosition.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width + 10 && jumpState == Enums.JumpState.GROUNDED && level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Unlocked") && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
-            if (position.x > level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width / 1.4f)) {
+            if (position.x > level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f)) {
                 velocity = new Vector2(20, 190);
                 jumpState = Enums.JumpState.JUMPING;
             } else {
-                viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width / 1.4f);
+                viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f);
             }//try jumping left if the player tapped in the upper left corner of the screen
         } else if (level.touchPosition.y > level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2 && level.touchPosition.x < level.catacombs.get(level.currentCatacomb).position.x - 10 && jumpState == Enums.JumpState.GROUNDED && level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Unlocked")  && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
-            if (position.x < level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width / 3.5f)) {
+            if (position.x < level.catacombs.get(level.currentCatacomb).position.x + (200 / 3.5f)) {
                 velocity = new Vector2(-20, 190);
                 jumpState = Enums.JumpState.JUMPING;
             } else {
-                viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width / 3.5f) - 1;
+                viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (200 / 3.5f) - 1;
             }
         }
     }
@@ -385,6 +422,7 @@ public class Player {
             }
             //reset the leg rotation startTime
             startTime = TimeUtils.nanoTime();
+            moving = false;
         }
     }
 
@@ -399,6 +437,8 @@ public class Player {
         float cyclePosition = cycles % 1;
         //move legs in a reciprocating motion
         legRotate = 180 + LEG_MOVEMENT_DISTANCE * MathUtils.sin(MathUtils.PI2 * cyclePosition);
+        //set moving to true
+        moving = true;
     }
 
     private void lookAround (float delta, float moveSpeed) {
@@ -435,27 +475,27 @@ public class Player {
         }
     }
 
-    private void talk (ShapeRenderer renderer, float talkSpeed) {
+    private void talk (ShapeRenderer renderer, float talkSpeed, Vector2 duckOffset) {
         //speed
         mouthFrameTimer += talkSpeed;
 
         //talk frames to make mouth move
         if (mouthFrameTimer >= 0 && mouthFrameTimer < 50) {
-            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 5, Constants.HEAD_SEGMENTS);
+            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), (position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 5, Constants.HEAD_SEGMENTS);
         } else if (mouthFrameTimer >= 50 && mouthFrameTimer < 100) {
-            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 4, Constants.HEAD_SEGMENTS);
+            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), (position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 4, Constants.HEAD_SEGMENTS);
         } else if (mouthFrameTimer >= 100 && mouthFrameTimer < 150) {
-            renderer.arc(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 4, 180, 180);
+            renderer.arc(position.x + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, 180, 180);
         } else if (mouthFrameTimer >= 150 && mouthFrameTimer < 200) {
-            renderer.arc(position.x + (mouthOffset.x * 1.1f), position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 4, 170, 170);
+            renderer.arc(position.x + (mouthOffset.x * 1.1f), (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, 170, 170);
         } else if (mouthFrameTimer >= 200 && mouthFrameTimer < 250) {
-            renderer.arc(position.x + (mouthOffset.x * 1.1f), position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 4, 175, 175);
+            renderer.arc(position.x + (mouthOffset.x * 1.1f), (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, 175, 175);
         } else if (mouthFrameTimer >= 250 && mouthFrameTimer < 300) {
-            renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
+            renderer.circle(position.x + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
         } else if (mouthFrameTimer >= 300 && mouthFrameTimer < 350) {
-            renderer.arc(position.x + (mouthOffset.x * 1.1f), position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 4, 175, 175);
+            renderer.arc(position.x + (mouthOffset.x * 1.1f), (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, 175, 175);
         } else if (mouthFrameTimer >= 350 && mouthFrameTimer < 400) {
-            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 4, Constants.HEAD_SEGMENTS);
+            renderer.ellipse(position.x + mouthOffset.x - (Constants.HEAD_SIZE / 8), (position.y - (Constants.HEAD_SIZE / 2) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 4, Constants.HEAD_SIZE / 4, Constants.HEAD_SEGMENTS);
         } else if (mouthFrameTimer >= 400) {
             mouthFrameTimer = 0;
         }
@@ -465,62 +505,198 @@ public class Player {
 
         //ShapeType
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        if (!duck) {
+            //ARMS
+            //arms
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, position.y - Constants.HEAD_SIZE, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate);
+            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate);
 
-        //ARMS
-        //arms
-        renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-        renderer.rect(position.x, position.y - Constants.HEAD_SIZE, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate);
-        renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate);
+            //hands
+            renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
+            renderer.circle(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f), Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
+            renderer.circle(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f), Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
 
-        //hands
-        renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
-        renderer.circle(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f), Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
-        renderer.circle(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f), Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
+            //LEGS
+            //legs
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, legRotate);
+            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, -legRotate);
 
-        //LEGS
-        //legs
-        renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-        renderer.rect(position.x, position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, legRotate);
-        renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, -legRotate);
+            //BODY
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.3f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+            //belt
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.2f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT / 10);
 
-        //BODY
-        renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-        renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.3f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
-        //belt
-        renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
-        renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.2f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT / 10);
-
-        //HEAD
-        //general shape and outline
-        renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
-        //main head
-        renderer.circle(position.x, position.y, Constants.HEAD_SIZE, Constants.HEAD_SEGMENTS);
-        renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
-        renderer.circle(position.x, position.y, Constants.HEAD_SIZE * 15 / 16, Constants.HEAD_SEGMENTS);
+            //HEAD
+            //general shape and outline
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            //main head
+            renderer.circle(position.x, position.y, Constants.HEAD_SIZE, Constants.HEAD_SEGMENTS);
+            renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
+            renderer.circle(position.x, position.y, Constants.HEAD_SIZE * 15 / 16, Constants.HEAD_SEGMENTS);
+            //if alert, show exclamation mark
+            if (alert) {
+                renderer.setColor(Color.WHITE);
+                renderer.circle(position.x, position.y + Constants.HEAD_SIZE * 1.5f, Constants.HEAD_SIZE / 4, 10);
+                renderer.rectLine(position.x, position.y + (Constants.HEAD_SIZE * 2), position.x, position.y + Constants.HEAD_SIZE * 3, Constants.HEAD_SIZE / 6);
+            }
 
             //eyes
-        renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
-        renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
-        renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
-        //mouth
-        renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
-        //mouth states
-        if (mouthState == Enums.MouthState.NORMAL) {
-            renderer.rectLine(position.x - (Constants.HEAD_SIZE / 4f) + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, position.x + (Constants.HEAD_SIZE / 4) + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.MOUTH_THICKNESS);
-        } else if (mouthState == Enums.MouthState.OPEN) {
-            renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
-        } else if (mouthState == Enums.MouthState.TALKING) {
-            talk(renderer, Constants.MOUTH_TALKING_SPEED);
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
+            renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
+            //mouth
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            //mouth states
+            if (mouthState == Enums.MouthState.NORMAL) {
+                renderer.rectLine(position.x - (Constants.HEAD_SIZE / 4f) + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, position.x + (Constants.HEAD_SIZE / 4) + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.MOUTH_THICKNESS);
+            } else if (mouthState == Enums.MouthState.OPEN) {
+                renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
+            } else if (mouthState == Enums.MouthState.TALKING) {
+                talk(renderer, Constants.MOUTH_TALKING_SPEED, new Vector2());
+            }
+            //health bar
+            if (danger) {
+                renderer.setColor(Color.WHITE);
+                renderer.rectLine(position.x - 10, position.y + Constants.HEAD_SIZE * 1.5f, position.x + 10, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+                renderer.setColor(Color.BLUE);
+                renderer.rectLine(position.x - 10, position.y + Constants.HEAD_SIZE * 1.5f, (position.x - 10) + health, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+                renderer.setColor(Color.RED);
+                renderer.rectLine((position.x - 10) + health, position.y + Constants.HEAD_SIZE * 1.5f, position.x + 10, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+            }
+            //energy bar
+            float energyY = 0;
+            if (useEnergy) {
+                //adjust energy bar y position
+                if (danger) {
+                    energyY = 6;
+                } else {
+                    energyY = 0;
+                }
+                renderer.setColor(Color.WHITE);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
+                renderer.setColor(Color.GREEN);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, (position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
+                renderer.setColor(Color.PURPLE);
+                renderer.rectLine((position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
+            }
+
+            //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            renderer.ellipse(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
+            renderer.rectLine(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), position.x - (Constants.HEAD_SIZE / 2f), position.y - (Constants.HEAD_SIZE / 2f), 1);
+        } else {
+            Vector2 duckOffset = new Vector2(0, -24);
+            armRotate = 25;
+            //ARMS
+            //arms
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, (position.y - Constants.HEAD_SIZE) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate);
+            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), (position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f)) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate);
+
+            //hands
+            renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
+            renderer.circle(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f), (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)) + duckOffset.y, Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
+            renderer.circle(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f), (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)) + duckOffset.y, Constants.HAND_SIZE, Constants.HEAD_SEGMENTS);
+
+            //LEGS
+            //legs
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 1, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, 100);
+            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 4, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, -100);
+            renderer.rectLine(position.x - (Constants.PLAYER_WIDTH * 2), (position.y - (Constants.PLAYER_HEIGHT * 2.08f)), position.x, (position.y - (Constants.PLAYER_HEIGHT * 2.1f)), Constants.PLAYER_WIDTH / 2);
+            renderer.rectLine(position.x + (Constants.PLAYER_WIDTH * 2), (position.y - (Constants.PLAYER_HEIGHT * 2.08f)), position.x + 1, (position.y - (Constants.PLAYER_HEIGHT * 2.1f)), Constants.PLAYER_WIDTH / 2);
+
+            //1.2f
+            //BODY
+            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x - (Constants.HEAD_SIZE / 2), (position.y - (Constants.PLAYER_HEIGHT * 1.3f)) + duckOffset.y + 7, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT - 7);
+            //belt
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            renderer.rect(position.x - (Constants.HEAD_SIZE / 2), (position.y - (Constants.PLAYER_HEIGHT * 1.2f))  + (duckOffset.y + 9), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT / 10);
+
+            //HEAD
+            //general shape and outline
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            //main head
+            renderer.circle(position.x, position.y + duckOffset.y, Constants.HEAD_SIZE, Constants.HEAD_SEGMENTS);
+            renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
+            renderer.circle(position.x, position.y + duckOffset.y, Constants.HEAD_SIZE * 15 / 16, Constants.HEAD_SEGMENTS);
+            //if alert, show exclamation mark
+            if (alert) {
+                renderer.setColor(Color.WHITE);
+                renderer.circle(position.x, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, Constants.HEAD_SIZE / 4, 10);
+                renderer.rectLine(position.x, (position.y + (Constants.HEAD_SIZE * 2)) + duckOffset.y, position.x, (position.y + Constants.HEAD_SIZE * 3) + duckOffset.y, Constants.HEAD_SIZE / 6);
+            }
+
+            //eyes
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            renderer.circle(eyeLookLeft.x + position.x, (eyeLookLeft.y + position.y) + duckOffset.y, Constants.HEAD_SIZE / 10, 4);
+            renderer.circle(eyeLookRight.x + position.x, (eyeLookRight.y + position.y) + duckOffset.y, Constants.HEAD_SIZE / 10, 4);
+            //mouth
+            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            //mouth states
+            if (mouthState == Enums.MouthState.NORMAL) {
+                renderer.rectLine(position.x - (Constants.HEAD_SIZE / 4f) + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, position.x + (Constants.HEAD_SIZE / 4) + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.MOUTH_THICKNESS);
+            } else if (mouthState == Enums.MouthState.OPEN) {
+                renderer.circle(position.x + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
+            } else if (mouthState == Enums.MouthState.TALKING) {
+                talk(renderer, Constants.MOUTH_TALKING_SPEED, duckOffset);
+            }
+            //health bar
+            if (danger) {
+                renderer.setColor(Color.WHITE);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, 4);
+                renderer.setColor(Color.BLUE);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, (position.x - 10) + health, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, 4);
+                renderer.setColor(Color.RED);
+                renderer.rectLine((position.x - 10) + health, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, 4);
+            }
+            //energy bar
+            float energyY = 0;
+            if (useEnergy) {
+                //adjust energy bar y position
+                if (danger) {
+                    energyY = 6;
+                } else {
+                    energyY = 0;
+                }
+                renderer.setColor(Color.WHITE);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, 4);
+                renderer.setColor(Color.GREEN);
+                renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, (position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, 4);
+                renderer.setColor(Color.PURPLE);
+                renderer.rectLine((position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, 4);
+            }
+
+            //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            renderer.ellipse(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
+            renderer.rectLine(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, position.x - (Constants.HEAD_SIZE / 2f), (position.y - (Constants.HEAD_SIZE / 2f)) + duckOffset.y, 1);
+
         }
-
-        //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
-        renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
-        renderer.ellipse(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
-        renderer.rectLine(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), position.x - (Constants.HEAD_SIZE / 2f), position.y - (Constants.HEAD_SIZE / 2f), 1);
-
+        //ducking and energy balance
+        if (useEnergy) {
+            if (duck) {
+                energy -= 0.1f;
+            }
+            if (energy <= 0) {
+                duck = false;
+                recoverE = true;
+            }
+            if ((!duck || recoverE) && energy < 20) {
+                energy += 0.2f;
+            }
+            if (energy > 4) {
+                recoverE = false;
+            }
+        }
         //Draw Item player is holding
-        if (jumpState == Enums.JumpState.GROUNDED) {
-            heldItem.render(renderer);
+        if (jumpState == Enums.JumpState.GROUNDED && !heldItem.itemType.equals("") && !duck) {
+            heldItem.render(renderer, level);
         }
     }
 
@@ -534,4 +710,6 @@ public class Player {
     public Vector2 getVelocity () {
         return velocity;
     }
+    //set player velocity if needed
+    public void setVelocity (Vector2 newVelocity) { velocity.set(newVelocity); }
 }

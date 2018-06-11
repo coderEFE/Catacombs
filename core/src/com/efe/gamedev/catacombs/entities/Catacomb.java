@@ -1,5 +1,6 @@
 package com.efe.gamedev.catacombs.entities;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
+import com.efe.gamedev.catacombs.util.Enums;
 
 
 /**
@@ -20,6 +22,7 @@ public class Catacomb {
     private Array<String> lockedDoors;
     public float height;
     public float width;
+    public boolean longCatacomb;
     public float wallThickness;
     private Vector2 shadowOffset;
 
@@ -39,7 +42,13 @@ public class Catacomb {
     Vector2 middleRightOffset;
     Vector2 bottomsOffset;
 
-    public Catacomb (Vector2 position, String Door1, String Door2, String Door3, String Door4, String Door5, String Door6) {
+    //drop stalactites
+    public boolean stalactites;
+    public boolean drop;
+    private Array<Stalactite> catacombStalactites;
+    private Level level;
+
+    public Catacomb (Vector2 position, String Door1, String Door2, String Door3, String Door4, String Door5, String Door6, Level level) {
         this.position = position;
         lockedDoors = new Array<String>();
         lockedDoors.add(Door1);
@@ -50,6 +59,7 @@ public class Catacomb {
         lockedDoors.add(Door6);
         height = 200;
         width = 200;
+        longCatacomb = false;
         wallThickness = 5;
         topLeft = new Vector2(position.x + 50, position.y + height - 15);
         middleLeft = new Vector2(position.x, position.y + height - 100);
@@ -64,6 +74,10 @@ public class Catacomb {
         middleRightOffset = new Vector2(0, 0);
         bottomsOffset = new Vector2(0, 0);
         shadowOffset = new Vector2(1.5f, 2);
+        stalactites = false;
+        drop = false;
+        catacombStalactites = new Array<Stalactite>();
+        this.level = level;
     }
 
     public void update (float delta) {
@@ -129,18 +143,74 @@ public class Catacomb {
                 bottomsOffset.x -= delta * moveSpeed * 2f;
             }
         }
+        //stalactite update
+        for (int i = 0; i < catacombStalactites.size; i++) {
+            if (drop) {
+                catacombStalactites.get(i).update(delta);
+                if (catacombStalactites.get(i).position.y < bottomLeft.y + catacombStalactites.get(i).size) {
+                    catacombStalactites.get(i).hit = true;
+                    if (catacombStalactites.get(i).fadeTimer > 20) {
+                        catacombStalactites.removeIndex(i);
+                    }
+                }
+                //player yells when they get close
+                if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE * 4f) {
+                    level.getPlayer().mouthState = Enums.MouthState.OPEN;
+                }
+                //remove stalactites when hit player
+                if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE) {
+                    if (level.getPlayer().health > 0) {
+                        level.getPlayer().health -= 5;
+                    }
+                    catacombStalactites.removeIndex(i);
+                }
+            }
+        }
+        if (drop) {
+            if (MathUtils.random() < delta * 5f) {
+                catacombStalactites.add(new Stalactite(new Vector2(MathUtils.random(position.x + 60, position.x + width - 50), (position.y + height) - 17), MathUtils.random(20, 30)));
+            }
+        }
     }
 
     public void render (ShapeRenderer renderer) {
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        if (longCatacomb) {
+            width = 300;
+            topLeft = new Vector2(position.x + 50, position.y + height - 15);
+            middleLeft = new Vector2(position.x, position.y + height - 100);
+            bottomLeft = new Vector2(position.x + 50, position.y + height - 185);
+            topRight = new Vector2(position.x + width - 50, position.y + height - 15);
+            middleRight = new Vector2(position.x + width, position.y + height - 100);
+            bottomRight = new Vector2(position.x + width - 50, position.y + height - 185);
+        }
         //general shape
         renderer.setColor(Color.GRAY);
-        renderer.ellipse(position.x, position.y, width, height, 0, 6);
+        //renderer.ellipse(position.x, position.y, width, height, 0, 6);
+        renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleLeft.x, middleLeft.y);
+        renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleRight.x, middleRight.y);
+        renderer.triangle(topLeft.x, topLeft.y, topRight.x, topRight.y, middleRight.x, middleRight.y);
+        renderer.triangle(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y, middleRight.x, middleRight.y);
     }
 
     public void renderWalls (ShapeRenderer renderer) {
         //catacomb walls
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        //Draw stalactites
+        if (stalactites) {
+            //((catacombStalactites.get(catacombStalactites.size - 1)).size/2)
+            if (!drop) {
+                catacombStalactites = new Array<Stalactite>();
+                for (int i = 0; i < (width - 100); i += 10) {
+                    //draw stalactites
+                    renderer.setColor(Color.DARK_GRAY);
+                    renderer.triangle((position.x + 60 + i) - (20 / 5), ((position.y + height) - 17), (position.x + 60 + i) + (20 / 5), ((position.y + height) - 17), (position.x + 60 + i), ((position.y + height) - 17) - 20);
+                }
+            }
+            for (int i = 0; i < catacombStalactites.size; i++) {
+                catacombStalactites.get(i).render(renderer);
+            }
+        }
         //SHADOW
         renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, 0.5f));
         renderer.rectLine(bottomLeft.x + bottomLeftOffset.x + shadowOffset.x, bottomLeft.y + bottomLeftOffset.y + shadowOffset.y, middleLeft.x + shadowOffset.x, middleLeft.y + shadowOffset.y, wallThickness);

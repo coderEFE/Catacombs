@@ -39,7 +39,7 @@ public class SpeechBubble {
     //text
     public int typeTimer;
     public int typeSpeed = 4;
-    private String typedUpText;
+    public String typedUpText;
     public boolean textLoaded;
 
     private float viewportOffset;
@@ -89,6 +89,7 @@ public class SpeechBubble {
         //make it look like text types itself out
         typeTimer += 1;
         typedUpText = text.substring(0, ((typeTimer / typeSpeed) < text.length()) ? typeTimer / typeSpeed : text.length());
+        //Gdx.app.log(TAG, "" + (typedUpText.length() == 0 ? "" : typedUpText.charAt(typedUpText.length() - 1)));
         //checks to see if the text is all typed out and gives a boolean value
         if (!((typeTimer / typeSpeed) < text.length())) {
             textLoaded = true;
@@ -131,7 +132,7 @@ public class SpeechBubble {
         //if position is loaded, draw speechBubble
         if (position.equals(new Vector2(Constants.HUD_SPEECH_BUBBLE_MARGIN + level.getPlayer().getPosition().x - viewportOffset, level.viewport.getWorldHeight() - height - Constants.SPEECH_BUBBLE_MARGIN + level.getPlayer().getPosition().y - 80))) {
             //first draw bubble with no alpha, then increase alpha quickly
-            renderer.setColor(target.equals("c7-x:") ? new Color(0.9f, 0.9f, 1.0f, speechBubbleAlpha) : new Color(Color.WHITE.r, Color.WHITE.g, Color.WHITE.b, speechBubbleAlpha));
+            renderer.setColor(target.equals("c7-x:") ? new Color(0.9f, 0.9f, 1.0f, speechBubbleAlpha) : (target.equals("Security:") ? new Color(1.0f, 0.8f, 0.8f, speechBubbleAlpha) : new Color(Color.WHITE.r, Color.WHITE.g, Color.WHITE.b, speechBubbleAlpha)));
             renderer.rect(position.x - 10 - 14, position.y + 3, width + 60 + targetOffset, height);
             renderer.rect(position.x - 5 - 14, position.y - 2, width + 50 + targetOffset, height + 10);
             renderer.arc(position.x - 5 - 14, position.y + 3 + height, 5, 90, 90, 10);
