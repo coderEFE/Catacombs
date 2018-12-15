@@ -12,6 +12,8 @@ import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
+import static java.lang.Math.random;
+
 /**
  * Created by coder on 11/13/2017.
  * This is the Player for the Catacombs game.
@@ -43,8 +45,17 @@ public class Player {
     public Vector2 viewportPosition;
     //player jumpState
     public Enums.JumpState jumpState;
+    //opacity
     private float spawnOpacity;
     public float spawnTimer;
+    //special effects
+    public boolean invisibility;
+    public boolean ghost;
+    public boolean shock;
+    public Color CLOTHES_COLOR = Color.GOLDENROD;
+    public boolean drinkPotion;
+    public float potionTimer;
+    public boolean disguise;
 
     //rotate legs
     public long startTime;
@@ -86,10 +97,13 @@ public class Player {
         mouthOffset = new Vector2();
         mouthState = Enums.MouthState.NORMAL;
         mouthFrameTimer = 0;
+        //initialize legs
         legRotate = 170;
         startTime = TimeUtils.nanoTime();
+        //initialize direction
         heldItem = new Item(new Vector2(position.x - (Constants.PLAYER_WIDTH * 1.2f), position.y - (Constants.PLAYER_HEIGHT / 1.05f)), viewportPosition, "");
         facing = Enums.Facing.LEFT;
+        //initialize other variables
         armRotate = 0;
         spawnOpacity = 1;
         spawnTimer = 0;
@@ -104,6 +118,12 @@ public class Player {
         useEnergy = true;
         energy = 20;
         recoverE = false;
+        invisibility = false;
+        ghost = false;
+        shock = false;
+        drinkPotion = false;
+        potionTimer = 40;
+        disguise = false;
     }
 
     public void update (float delta) {
@@ -119,7 +139,7 @@ public class Player {
         position.mulAdd(velocity, delta);
 
         //stop player from falling below current catacomb if bottom is locked
-        if (position.y < level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).wallThickness + 61 && (!level.catacombs.get(level.currentCatacomb).getLockedDoors().get(5).equals("Unlocked") && level.catacombs.get(level.currentCatacomb).bottomsOffset.x > -60) && insideCatacomb()) {
+        if ((position.y < level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).wallThickness + 61 && (!level.catacombs.get(level.currentCatacomb).getLockedDoors().get(5).equals("Unlocked") || level.catacombs.get(level.currentCatacomb).bottomsOffset.x > (-1 * (level.catacombs.get(level.currentCatacomb).width - 150))) && insideCatacomb()) || (level.superior.currentLevel == 14 && level.currentBubble > 21 && level.currentBubble < 62)) {
             velocity.y = 0;
             velocity.x = 0;
             position.y = level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).wallThickness + 61;
@@ -127,6 +147,7 @@ public class Player {
         }
 
         //move player's eyes and mouth
+        //TODO: make player's facial features and body move according to delta
         lookAround(delta, 5);
         if (spawnTimer >= 110) {
             //move player when player touches screen
@@ -166,41 +187,62 @@ public class Player {
 
             //try to collect items
             collectItem();
-            //set direction
-            if (level.touchPosition.x < position.x) {
-                facing = Enums.Facing.LEFT;
-            }
-            if (level.touchPosition.x > position.x) {
-                facing = Enums.Facing.RIGHT;
+            //set direction if you are not changing items in inventory
+            if (level.touchPosition.y > level.inventory.position.y || level.touchPosition.y < level.inventory.position.y - (level.viewport.getWorldHeight() / 7)) {
+                if (level.touchPosition.x < position.x) {
+                    facing = Enums.Facing.LEFT;
+                }
+                if (level.touchPosition.x > position.x) {
+                    facing = Enums.Facing.RIGHT;
+                }
             }
             //unlock high walls
+            //if heldItem is a key, a Locked door becomes Unlocked and a DoubleLocked door becomes Locked. Also, an Unlocked door can become Locked. If heldItem is a doubleKey, then a DoubleLocked door can become Unlocked.
             //middleRight
-            if (position.x >= currentCatacomb.position.x + currentCatacomb.width - 55 && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(3).equals("Closed")) {
-                if (currentCatacomb.getLockedDoors().get(3).equals("Locked")) {
+            if (position.x >= currentCatacomb.position.x + currentCatacomb.width - 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(3).equals("Closed")) {
+                //with normal key
+                if (currentCatacomb.getLockedDoors().get(3).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(3, "Unlocked");
-                } else if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked")) {
+                    level.gameplayScreen.sound6.play();
+                } else if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(3, "Locked");
+                    level.gameplayScreen.sound6.play();
                 }
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                //with doubleKey
+                if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                    currentCatacomb.getLockedDoors().set(3, "Unlocked");
+                    level.gameplayScreen.sound6.play();
+                }
+                //take away key after it is used
+                level.inventory.deleteCurrentItem();
+                //lock doors
             } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(3).equals("Unlocked")) {
                 currentCatacomb.getLockedDoors().set(3, "Locked");
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                level.gameplayScreen.sound6.play();
+                level.inventory.deleteCurrentItem();
             }
             //middleLeft
-            if (position.x <= currentCatacomb.position.x + 55 && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(1).equals("Closed")) {
-                if (currentCatacomb.getLockedDoors().get(1).equals("Locked")) {
+            if (position.x <= currentCatacomb.position.x + 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(1).equals("Closed")) {
+                //with normal key
+                if (currentCatacomb.getLockedDoors().get(1).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(1, "Unlocked");
-                } else if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked")) {
+                    level.gameplayScreen.sound6.play();
+                } else if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(1, "Locked");
+                    level.gameplayScreen.sound6.play();
                 }
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                //with doubleKey
+                if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                    currentCatacomb.getLockedDoors().set(1, "Unlocked");
+                    level.gameplayScreen.sound6.play();
+                }
+                //take away key after it is used
+                level.inventory.deleteCurrentItem();
+                //lock doors
             } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(1).equals("Unlocked")) {
                 currentCatacomb.getLockedDoors().set(1, "Locked");
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                level.gameplayScreen.sound6.play();
+                level.inventory.deleteCurrentItem();
             }
         }
         //find nearest catacomb's doors and set them to currentCatacomb doors
@@ -231,15 +273,18 @@ public class Player {
                     item.itemWidth * 1.4f,
                     item.itemHeight);
             //if player bounds touches item bounds, remove item.
-            if (itemBounds.overlaps(playerBounds)) {
-                if (item.itemType.equals("dagger")) {
+            //Don't allow player to pick up a bomb if it is triggered or exploding
+            if (itemBounds.overlaps(playerBounds) && !item.collected && !item.bomb.triggered && !item.bomb.exploding) {
+                //if player has a weapon, set hasWeapon to true
+                if (item.itemType.equals("dagger") || item.itemType.equals("stungun") || item.itemType.equals("bomb")) {
                     hasWeapon = true;
                 }
+                //if player has gold, set hasGold to true
                 if (item.itemType.equals("gold")) {
                     hasGold = true;
                 }
+                //collect item
                 item.collected = true;
-                //TODO: do this with chest too
                 //if item has not been collected before, pop up a screen telling what item is.
                 if (!level.collectedItems[level.collectedItemTypes.indexOf(item.itemType, true)]) {
                     level.collectedItems[level.collectedItemTypes.indexOf(item.itemType, true)] = true;
@@ -263,6 +308,38 @@ public class Player {
             heldItem.itemFacing = Enums.Facing.RIGHT;
             heldItem.position.set(new Vector2(heldItem.itemType.equals("dagger") ? (position.x + (Constants.PLAYER_WIDTH * 0.8f) + (velocity.x / 40)) : (position.x + (Constants.PLAYER_WIDTH * 1.2f) + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60))));
         }
+        //if player taps on potions, player will drink the potion.
+        if (heldItem.potion.touchPotion(level.touchPosition) && heldItem.potion.full && !drinkPotion && level.pressDown) {
+            //different effects for different potions
+            if (heldItem.itemType.equals("invisibility") && level.superior.currentLevel > 7) {
+                drinkPotion = true;
+                potionTimer = 40;
+                invisibility = true;
+                level.inventory.inventoryItems.get(level.inventory.selectedItem).potion.full = false;
+            } else if (heldItem.itemType.equals("ghost") && (level.superior.currentLevel > 8 || level.currentBubble > 2)) {
+                drinkPotion = true;
+                potionTimer = 40;
+                ghost = true;
+                invisibility = true;
+                level.inventory.inventoryItems.get(level.inventory.selectedItem).potion.full = false;
+            } else if (heldItem.itemType.equals("shock")) {
+                drinkPotion = true;
+                potionTimer = 40;
+                shock = true;
+                level.inventory.inventoryItems.get(level.inventory.selectedItem).potion.full = false;
+            }
+        }
+        //if potion has not been drunk, make it full, and vise versa
+        if (level.inventory.selectedItem != -1 && (heldItem.itemType.equals("invisibility") || heldItem.itemType.equals("ghost") || heldItem.itemType.equals("shock"))) {
+            heldItem.potion.full = level.inventory.inventoryItems.get(level.inventory.selectedItem).potion.full;
+        }
+        //reset touchPosition
+        /*if (level.touchPosition.dst(new Vector2(heldItem.itemType.equals("dagger") ? (position.x - (Constants.PLAYER_WIDTH * 1.0f) - heldItem.itemWidth + (velocity.x / 40)) : (position.x - (Constants.PLAYER_WIDTH * 1.2f) - heldItem.itemWidth + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)))) < 8 && facing == Enums.Facing.RIGHT) {
+            level.touchPosition.set(new Vector2());
+        }
+        if (level.touchPosition.dst(new Vector2(heldItem.itemType.equals("dagger") ? (position.x + (Constants.PLAYER_WIDTH * 0.8f) + (velocity.x / 40)) : (position.x + (Constants.PLAYER_WIDTH * 1.2f) + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)))) < 8 && facing == Enums.Facing.LEFT) {
+            level.touchPosition.set(new Vector2());
+        }*/
     }
 
     //when player spawns, its opacity flashes a few times
@@ -282,22 +359,25 @@ public class Player {
             spawnOpacity = 1;
         } else if (spawnTimer >= 90 && spawnTimer < 110) {
             spawnOpacity = 0;
-        } else if (spawnTimer >= 110) {
+        } else if (spawnTimer >= 110 && spawnTimer < 119) {
             spawnOpacity = 1;
         }
     }
-
+    //allows player to jump to other catacombs
     public void tryJumping () {
+        //player can jump through walls when the "ghost" Potion is drunk.
         //try jumping right if the player tapped in the upper right corner of the screen
-        if (level.touchPosition.y > level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2 && level.touchPosition.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width + 10 && jumpState == Enums.JumpState.GROUNDED && level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Unlocked") && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
+        if (level.touchPosition.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width - 25 && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
             if (position.x > level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f)) {
+                level.viewportPosition.set(new Vector2(level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width + 20, (level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2f) + 25));
                 velocity = new Vector2(20, 190);
                 jumpState = Enums.JumpState.JUMPING;
             } else {
                 viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f);
             }//try jumping left if the player tapped in the upper left corner of the screen
-        } else if (level.touchPosition.y > level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2 && level.touchPosition.x < level.catacombs.get(level.currentCatacomb).position.x - 10 && jumpState == Enums.JumpState.GROUNDED && level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Unlocked")  && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
+        } else if (level.touchPosition.x < level.catacombs.get(level.currentCatacomb).position.x + 25 && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
             if (position.x < level.catacombs.get(level.currentCatacomb).position.x + (200 / 3.5f)) {
+                level.viewportPosition.set(new Vector2(level.catacombs.get(level.currentCatacomb).position.x - 20, (level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2f) + 25));
                 velocity = new Vector2(-20, 190);
                 jumpState = Enums.JumpState.JUMPING;
             } else {
@@ -318,18 +398,29 @@ public class Player {
         Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
         //check if position.x is more than catacomb's left side
         boolean outsideX = position.x <= currentCatacomb.position.x + 55;
-        if (outsideX && currentCatacomb.getLockedDoors().get(0).equals("Closed") && jumpState != Enums.JumpState.JUMPING) {
+        //Unlock door on left side
+        if (outsideX && (currentCatacomb.getLockedDoors().get(0).equals("Closed") || currentCatacomb.getLockedDoors().get(5).equals("Unlocked")) && jumpState != Enums.JumpState.JUMPING) {
             viewportPosition.x = currentCatacomb.position.x + 55.5f;
             resetLegs();
         } else if (outsideX && (currentCatacomb.getLockedDoors().get(0).equals("Locked") || currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked")) && jumpState != Enums.JumpState.JUMPING) {
-            if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomLeft.x + currentCatacomb.bottomLeftOffset.x - 5.5f, currentCatacomb.bottomLeft.y + currentCatacomb.bottomLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
-                if (currentCatacomb.getLockedDoors().get(0).equals("Locked")) {
+            if (((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.bottomLeft.x + currentCatacomb.bottomLeftOffset.x - 5.5f, currentCatacomb.bottomLeft.y + currentCatacomb.bottomLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) || ghost) {
+                //with normal key
+                if (currentCatacomb.getLockedDoors().get(0).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(0, "Unlocked");
-                } else if (currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked")) {
+                    level.gameplayScreen.sound6.play();
+                } else if (currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(0, "Locked");
+                    level.gameplayScreen.sound6.play();
                 }
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                //with doubleKey
+                if (currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                    currentCatacomb.getLockedDoors().set(0, "Unlocked");
+                    level.gameplayScreen.sound6.play();
+                }
+                //take away key after it is used
+                if ((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey")))) {
+                    level.inventory.deleteCurrentItem();
+                }
             } else {
                 viewportPosition.x = currentCatacomb.position.x + 55.5f;
                 resetLegs();
@@ -337,8 +428,8 @@ public class Player {
             //lock door
         } else if (currentCatacomb.getLockedDoors().get(0).equals("Unlocked") && jumpState != Enums.JumpState.JUMPING && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomLeft.x + currentCatacomb.bottomLeftOffset.x - 6, currentCatacomb.bottomLeft.y + currentCatacomb.bottomLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
             currentCatacomb.getLockedDoors().set(0, "Locked");
-            level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-            level.inventory.selectedItem = -1;
+            level.gameplayScreen.sound6.play();
+            level.inventory.deleteCurrentItem();
         }
             //return results to determine if player is outside catacomb's bounds
         return outsideX;
@@ -347,37 +438,52 @@ public class Player {
     private void setNearCatacombDoors () {
         Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
         for (Catacomb catacomb : level.catacombs) {
-        if ((new Vector2((catacomb.position.x + catacomb.width / 2), (catacomb.position.y + catacomb.width / 2))).dst(new Vector2((currentCatacomb.position.x + currentCatacomb.width / 2) - 150, (currentCatacomb.position.y + currentCatacomb.width / 2) - 85)) < currentCatacomb.width / 2) {
-            catacomb.getLockedDoors().set(3, currentCatacomb.getLockedDoors().get(0));
-        }
-        if ((new Vector2((catacomb.position.x + catacomb.width / 2), (catacomb.position.y + catacomb.width / 2))).dst(new Vector2((currentCatacomb.position.x + currentCatacomb.width / 2) - 150, (currentCatacomb.position.y + currentCatacomb.width / 2) + 85)) < currentCatacomb.width / 2) {
-            catacomb.getLockedDoors().set(4, currentCatacomb.getLockedDoors().get(1));
-        }
-        if ((new Vector2((catacomb.position.x + catacomb.width / 2), (catacomb.position.y + catacomb.width / 2))).dst(new Vector2((currentCatacomb.position.x + currentCatacomb.width / 2) + 150, (currentCatacomb.position.y + currentCatacomb.width / 2) + 85)) < currentCatacomb.width / 2) {
-            catacomb.getLockedDoors().set(0, currentCatacomb.getLockedDoors().get(3));
-        }
-        if ((new Vector2((catacomb.position.x + catacomb.width / 2), (catacomb.position.y + catacomb.width / 2))).dst(new Vector2((currentCatacomb.position.x + currentCatacomb.width / 2) + 150, (currentCatacomb.position.y + currentCatacomb.width / 2) - 85)) < currentCatacomb.width / 2) {
-            catacomb.getLockedDoors().set(1, currentCatacomb.getLockedDoors().get(4));
+            //bottom left
+            if ((new Vector2((catacomb.position.x + (catacomb.width - 100)), (catacomb.position.y + catacomb.height / 2))).dst(new Vector2((currentCatacomb.position.x + 200 / 2) - 150, (currentCatacomb.position.y + currentCatacomb.height / 2) - 85)) < 200 / 2) {
+                catacomb.getLockedDoors().set(3, currentCatacomb.getLockedDoors().get(0));
+            }
+            //top left
+            if ((new Vector2((catacomb.position.x + (catacomb.width - 100)), (catacomb.position.y + catacomb.height / 2))).dst(new Vector2((currentCatacomb.position.x + 200 / 2) - 150, (currentCatacomb.position.y + currentCatacomb.height / 2) + 85)) < 200 / 2) {
+                catacomb.getLockedDoors().set(4, currentCatacomb.getLockedDoors().get(1));
+            }
+            //top right
+            if ((new Vector2((catacomb.position.x + 200 / 2), (catacomb.position.y + catacomb.height / 2))).dst(new Vector2((currentCatacomb.position.x + (currentCatacomb.width - 100)) + 150, (currentCatacomb.position.y + currentCatacomb.height / 2) + 85)) < 200 / 2) {
+                catacomb.getLockedDoors().set(0, currentCatacomb.getLockedDoors().get(3));
+            }
+            //bottom right
+            if ((new Vector2((catacomb.position.x + 200 / 2), (catacomb.position.y + catacomb.height / 2))).dst(new Vector2((currentCatacomb.position.x + (currentCatacomb.width - 100)) + 150, (currentCatacomb.position.y + currentCatacomb.height / 2) - 85)) < 200 / 2) {
+                catacomb.getLockedDoors().set(1, currentCatacomb.getLockedDoors().get(4));
+            }
         }
     }
-}
 
     private boolean outsideCatacombRight () {
         Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
         //check if position.x is less than catacomb's right side
         boolean outsideWidth = position.x >= currentCatacomb.position.x + currentCatacomb.width - 55;
-        if (outsideWidth && currentCatacomb.getLockedDoors().get(4).equals("Closed") && jumpState != Enums.JumpState.JUMPING) {
+        //Unlock door on right side
+        if (outsideWidth && (currentCatacomb.getLockedDoors().get(4).equals("Closed") || currentCatacomb.getLockedDoors().get(5).equals("Unlocked")) && jumpState != Enums.JumpState.JUMPING) {
             viewportPosition.x = currentCatacomb.position.x + currentCatacomb.width - 58f;
             resetLegs();
         } else if (outsideWidth && (currentCatacomb.getLockedDoors().get(4).equals("Locked") || currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked")) && jumpState != Enums.JumpState.JUMPING) {
-            if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomRight.x + currentCatacomb.bottomRightOffset.x + 5.5f, currentCatacomb.bottomRight.y + currentCatacomb.bottomRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
-                if (currentCatacomb.getLockedDoors().get(4).equals("Locked")) {
+            if (((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.bottomRight.x + currentCatacomb.bottomRightOffset.x + 5.5f, currentCatacomb.bottomRight.y + currentCatacomb.bottomRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) || ghost) {
+                //with normal key
+                if (currentCatacomb.getLockedDoors().get(4).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(4, "Unlocked");
-                } else if (currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked")) {
+                    level.gameplayScreen.sound6.play();
+                } else if (currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(4, "Locked");
+                    level.gameplayScreen.sound6.play();
                 }
-                level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-                level.inventory.selectedItem = -1;
+                //with doubleKey
+                if (currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                    currentCatacomb.getLockedDoors().set(4, "Unlocked");
+                    level.gameplayScreen.sound6.play();
+                }
+                //take away key after it is used
+                if ((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey")))) {
+                    level.inventory.deleteCurrentItem();
+                }
             } else {
                 viewportPosition.x = currentCatacomb.position.x + currentCatacomb.width - 58f;
                 resetLegs();
@@ -385,8 +491,8 @@ public class Player {
             //lock door
         } else if (currentCatacomb.getLockedDoors().get(4).equals("Unlocked") && jumpState != Enums.JumpState.JUMPING && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomRight.x + currentCatacomb.bottomRightOffset.x + 5.5f, currentCatacomb.bottomRight.y + currentCatacomb.bottomRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
             currentCatacomb.getLockedDoors().set(4, "Locked");
-            level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
-            level.inventory.selectedItem = -1;
+            level.gameplayScreen.sound6.play();
+            level.inventory.deleteCurrentItem();
         }
         //return results to determine if player is outside catacomb's bounds
         return outsideWidth;
@@ -394,7 +500,7 @@ public class Player {
 
     private void movePlayer (float delta, float moveSpeed) {
         //move player if player is not where you touched
-        if (!(position.x < viewportPosition.x + 1) || !(position.x > viewportPosition.x)) {
+        if (!(position.x < viewportPosition.x + 1) || !((position.x < level.catacombs.get(level.currentCatacomb).position.x + 55 || position.x > (level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width) - 65) ? (position.x > viewportPosition.x) : (position.x > viewportPosition.x - 1))) {
             //go left
             if (position.x > viewportPosition.x) {
                 position.x -= delta * moveSpeed;
@@ -500,17 +606,83 @@ public class Player {
             mouthFrameTimer = 0;
         }
     }
+    //electricity
+    private void Spark (ShapeRenderer renderer, Vector2 startPosition, Vector2 endPosition) {
+        //calculate distance
+        //double distance = Math.sqrt(Math.pow((endPosition.x - startPosition.x), 2) + Math.pow((endPosition.y - startPosition.y), 2));
+        float xIncrement = (endPosition.x - startPosition.x) / 6;
+        float yIncrement = (endPosition.y - startPosition.y) / 6;
+        renderer.setColor(Color.GREEN);
+        Vector2 r1 = new Vector2(MathUtils.random(startPosition.x, startPosition.x + 3), MathUtils.random(startPosition.y, startPosition.y + 3));
+        Vector2 r2 = new Vector2(MathUtils.random(r1.x, r1.x + xIncrement), MathUtils.random(r1.y, r1.y + yIncrement));
+        Vector2 r3 = new Vector2(MathUtils.random(r2.x, r2.x + xIncrement), MathUtils.random(r2.y, r2.y + yIncrement));
+        Vector2 r4 = new Vector2(MathUtils.random(r3.x, r3.x + xIncrement), MathUtils.random(r3.y, r3.y + yIncrement));
+        Vector2 r5 = new Vector2(MathUtils.random(r4.x, r4.x + xIncrement), MathUtils.random(r4.y, r4.y + yIncrement));
+        Vector2 r6 = new Vector2(MathUtils.random(r5.x, r5.x + xIncrement), MathUtils.random(r5.y, r5.y + yIncrement));
+
+        renderer.line(startPosition, r1);
+        renderer.line(r1, r2);
+        renderer.line(r2, r3);
+        renderer.line(r3, r4);
+        renderer.line(r4, r5);
+        renderer.line(r5, r6);
+    }
 
     public void render (ShapeRenderer renderer) {
-
         //ShapeType
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        //make player invisible
+        if (invisibility) {
+            if (spawnOpacity > 0.3f) {
+                spawnOpacity -= 0.01f;
+            }
+        } else {
+            if (spawnOpacity < 1f) {
+                spawnOpacity += 0.01f;
+            }
+        }
+        //make player look white
+        //r:0.85490197, g:0.64705884, b:0.1254902
+        if (ghost) {
+            //red value
+            if (CLOTHES_COLOR.r < 1f) {
+                CLOTHES_COLOR.r += 0.01f;
+            }
+            //green value
+            if (CLOTHES_COLOR.g < 1f) {
+                CLOTHES_COLOR.g += 0.01f;
+            }
+            //blue value
+            if (CLOTHES_COLOR.b < 1f) {
+                CLOTHES_COLOR.b += 0.01f;
+            }
+        } else {
+            //reset color to normal
+            //red value
+            if (CLOTHES_COLOR.r > 0.85490197f) {
+                CLOTHES_COLOR.r -= 0.01f;
+            }
+            //green value
+            if (CLOTHES_COLOR.g > 0.64705884f) {
+                CLOTHES_COLOR.g -= 0.01f;
+            }
+            //blue value
+            if (CLOTHES_COLOR.b > 0.1254902f) {
+                CLOTHES_COLOR.b -= 0.01f;
+            }
+        }
+        //disguise changes clothes color
+        if (disguise) {
+            CLOTHES_COLOR = new Color(Constants.GUARD_CLOTHES_COLOR);
+        } else {
+            CLOTHES_COLOR = new Color(Color.GOLDENROD);
+        }
         if (!duck) {
             //ARMS
             //arms
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-            renderer.rect(position.x, position.y - Constants.HEAD_SIZE, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate);
-            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate);
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, position.y - Constants.HEAD_SIZE, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
 
             //hands
             renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
@@ -519,15 +691,22 @@ public class Player {
 
             //LEGS
             //legs
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-            renderer.rect(position.x, position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, legRotate);
-            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, -legRotate);
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, legRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), position.y - (Constants.PLAYER_HEIGHT * 1f), 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 1.2f, 1, 1, -legRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
 
             //BODY
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
             renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.3f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+            //high ranking symbols
+            if (disguise) {
+                //high ranking symbols
+                renderer.setColor(new Color(Constants.GUARD_CLOTHES_COLOR.r * 0.4f, Constants.GUARD_CLOTHES_COLOR.g * 0.4f, Constants.GUARD_CLOTHES_COLOR.b * 0.4f, spawnOpacity));
+                renderer.rect((position.x - (Constants.HEAD_SIZE / 2)) + 1, position.y - (Constants.PLAYER_HEIGHT * 0.5f), Constants.PLAYER_WIDTH / 3f, Constants.PLAYER_HEIGHT / 11f);
+                renderer.rect((position.x - (Constants.HEAD_SIZE / 2)) + 1, position.y - (Constants.PLAYER_HEIGHT * 0.6f), Constants.PLAYER_WIDTH / 3f, Constants.PLAYER_HEIGHT / 11f);
+            }
             //belt
-            renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
+            renderer.setColor(disguise ? new Color(0.2f, 0.2f, 0.2f, spawnOpacity) : new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
             renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.2f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT / 10);
 
             //HEAD
@@ -545,7 +724,11 @@ public class Player {
             }
 
             //eyes
-            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            if (shock) {
+                renderer.setColor(new Color(Color.GREEN.r, Color.GREEN.g, Color.GREEN.b, spawnOpacity));
+            } else {
+                renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            }
             renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
             renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
             //mouth
@@ -558,6 +741,29 @@ public class Player {
             } else if (mouthState == Enums.MouthState.TALKING) {
                 talk(renderer, Constants.MOUTH_TALKING_SPEED, new Vector2());
             }
+            //when player drinks a potion, display potion bar
+            if (drinkPotion) {
+                renderer.setColor(new Color(Color.GRAY.r * 1.2f, Color.GRAY.g * 1.2f, Color.GRAY.b * 1.2f, 1));
+                renderer.rectLine(position.x - 20, (position.y + Constants.HEAD_SIZE * 1.5f) + 12, position.x + 20, (position.y + Constants.HEAD_SIZE * 1.5f) + 12, 4);
+                renderer.setColor(Color.WHITE);
+                renderer.rectLine(position.x - 20, (position.y + Constants.HEAD_SIZE * 1.5f) + 12, (position.x - 20) + potionTimer, (position.y + Constants.HEAD_SIZE * 1.5f) + 12, 4);
+                if (shock && potionTimer > 39) {
+                    //stop holding any items
+                    level.inventory.selectedItem = -1;
+                }
+                if (!level.show && !level.inventory.paused && !level.inventory.newItem) {
+                    potionTimer -= 0.05;
+                }
+                if (potionTimer <= 0 && jumpState == Enums.JumpState.GROUNDED) {
+                    ghost = false;
+                    invisibility = false;
+                    shock = false;
+                    drinkPotion = false;
+                    potionTimer = 40;
+                }
+            } else {
+                potionTimer = 40;
+            }
             //health bar
             if (danger) {
                 renderer.setColor(Color.WHITE);
@@ -568,7 +774,7 @@ public class Player {
                 renderer.rectLine((position.x - 10) + health, position.y + Constants.HEAD_SIZE * 1.5f, position.x + 10, position.y + Constants.HEAD_SIZE * 1.5f, 4);
             }
             //energy bar
-            float energyY = 0;
+            float energyY;
             if (useEnergy) {
                 //adjust energy bar y position
                 if (danger) {
@@ -584,18 +790,33 @@ public class Player {
                 renderer.rectLine((position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
             }
 
-            //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
-            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
-            renderer.ellipse(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
-            renderer.rectLine(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), position.x - (Constants.HEAD_SIZE / 2f), position.y - (Constants.HEAD_SIZE / 2f), 1);
+            if (level.superior.currentLevel != 14) {
+                //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
+                renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+                renderer.ellipse(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
+                renderer.rectLine(position.x - Constants.HEAD_SIZE, position.y - (Constants.HEAD_SIZE / 4f), position.x - (Constants.HEAD_SIZE / 2f), position.y - (Constants.HEAD_SIZE / 2f), 1);
+            }
+
+            if (disguise) {
+                //Draw guard's cap if player has disguise.
+                renderer.setColor(new Color(Constants.GUARD_CLOTHES_COLOR.r * 0.4f, Constants.GUARD_CLOTHES_COLOR.g * 0.4f, Constants.GUARD_CLOTHES_COLOR.b * 0.4f, spawnOpacity));
+                if (facing == Enums.Facing.LEFT) {
+                    renderer.rect((position.x - Constants.HEAD_SIZE) + 3, position.y + Constants.HEAD_SIZE * 0.5f, (Constants.HEAD_SIZE * 2f) - 4, Constants.HEAD_SIZE / 2f);
+                    renderer.rect((position.x - Constants.HEAD_SIZE) - 2, position.y + Constants.HEAD_SIZE * 0.5f, 5, Constants.HEAD_SIZE / 3f);
+                }
+                if (facing == Enums.Facing.RIGHT) {
+                    renderer.rect((position.x - Constants.HEAD_SIZE) + 2, position.y + Constants.HEAD_SIZE * 0.5f, (Constants.HEAD_SIZE * 2f) - 3, Constants.HEAD_SIZE / 2f);
+                    renderer.rect((position.x - Constants.HEAD_SIZE) + 1 + ((Constants.HEAD_SIZE * 2f) - 3), position.y + Constants.HEAD_SIZE * 0.5f, 5, Constants.HEAD_SIZE / 3f);
+                }
+            }
         } else {
             Vector2 duckOffset = new Vector2(0, -24);
             armRotate = 25;
             //ARMS
             //arms
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-            renderer.rect(position.x, (position.y - Constants.HEAD_SIZE) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate);
-            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), (position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f)) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate);
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, (position.y - Constants.HEAD_SIZE) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, 150f - armRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f), (position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f)) + duckOffset.y, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT / 1.5f, 1, 1, -150f + armRotate, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
 
             //hands
             renderer.setColor(new Color(Constants.SKIN_COLOR.r, Constants.SKIN_COLOR.g, Constants.SKIN_COLOR.b, spawnOpacity));
@@ -604,15 +825,15 @@ public class Player {
 
             //LEGS
             //legs
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
-            renderer.rect(position.x, (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 1, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, 100);
-            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 4, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, -100);
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x, (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 1, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, 100, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
+            renderer.rect(position.x + (Constants.PLAYER_WIDTH / 2), (position.y - (Constants.PLAYER_HEIGHT * 1f)) + duckOffset.y + 4, 0, 0, Constants.PLAYER_WIDTH / 2, Constants.PLAYER_HEIGHT * 0.6f, 1, 1, -100, new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, invisibility ? spawnOpacity - 0.3f : spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity), new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
             renderer.rectLine(position.x - (Constants.PLAYER_WIDTH * 2), (position.y - (Constants.PLAYER_HEIGHT * 2.08f)), position.x, (position.y - (Constants.PLAYER_HEIGHT * 2.1f)), Constants.PLAYER_WIDTH / 2);
             renderer.rectLine(position.x + (Constants.PLAYER_WIDTH * 2), (position.y - (Constants.PLAYER_HEIGHT * 2.08f)), position.x + 1, (position.y - (Constants.PLAYER_HEIGHT * 2.1f)), Constants.PLAYER_WIDTH / 2);
 
             //1.2f
             //BODY
-            renderer.setColor(new Color(Constants.CLOTHES_COLOR.r, Constants.CLOTHES_COLOR.g, Constants.CLOTHES_COLOR.b, spawnOpacity));
+            renderer.setColor(new Color(CLOTHES_COLOR.r, CLOTHES_COLOR.g, CLOTHES_COLOR.b, spawnOpacity));
             renderer.rect(position.x - (Constants.HEAD_SIZE / 2), (position.y - (Constants.PLAYER_HEIGHT * 1.3f)) + duckOffset.y + 7, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT - 7);
             //belt
             renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
@@ -633,7 +854,11 @@ public class Player {
             }
 
             //eyes
-            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            if (shock) {
+                renderer.setColor(new Color(Color.GREEN.r, Color.GREEN.g, Color.GREEN.b, spawnOpacity));
+            } else {
+                renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+            }
             renderer.circle(eyeLookLeft.x + position.x, (eyeLookLeft.y + position.y) + duckOffset.y, Constants.HEAD_SIZE / 10, 4);
             renderer.circle(eyeLookRight.x + position.x, (eyeLookRight.y + position.y) + duckOffset.y, Constants.HEAD_SIZE / 10, 4);
             //mouth
@@ -656,7 +881,7 @@ public class Player {
                 renderer.rectLine((position.x - 10) + health, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + duckOffset.y, 4);
             }
             //energy bar
-            float energyY = 0;
+            float energyY;
             if (useEnergy) {
                 //adjust energy bar y position
                 if (danger) {
@@ -672,11 +897,17 @@ public class Player {
                 renderer.rectLine((position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY + duckOffset.y, 4);
             }
 
-            //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
-            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
-            renderer.ellipse(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
-            renderer.rectLine(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, position.x - (Constants.HEAD_SIZE / 2f), (position.y - (Constants.HEAD_SIZE / 2f)) + duckOffset.y, 1);
-
+            if (level.superior.currentLevel != 14) {
+                //Draw cx-7 (the robot voice with the Player, it looks like a head microphone)
+                renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+                renderer.ellipse(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, Constants.HEAD_SIZE / 6f, Constants.HEAD_SIZE / 1.5f);
+                renderer.rectLine(position.x - Constants.HEAD_SIZE, (position.y - (Constants.HEAD_SIZE / 4f)) + duckOffset.y, position.x - (Constants.HEAD_SIZE / 2f), (position.y - (Constants.HEAD_SIZE / 2f)) + duckOffset.y, 1);
+            }
+        }
+        //if shock, render electric sparks around player
+        if (shock) {
+            Spark(renderer, new Vector2(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)), new Vector2(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f) - 20, position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f) - 20));
+            Spark(renderer, new Vector2(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)), new Vector2(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f) + 20, position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f) - 20));
         }
         //ducking and energy balance
         if (useEnergy) {
@@ -688,7 +919,21 @@ public class Player {
                 recoverE = true;
             }
             if ((!duck || recoverE) && energy < 20) {
-                energy += 0.2f;
+                if (heldItem.itemType.equals("stungun")) {
+                    if (level.superior.currentLevel != 14) {
+                        energy += 1f;
+                    } else {
+                        //reload energy every 10 shots during boss battle
+                        energy += ((level.getPlayer().heldItem.stungun.lasersShot % 10 == 0) ? 0.2f : 1f);
+                        if (level.getPlayer().heldItem.stungun.lasersShot % 10 == 0 && energy < 19) {
+                            level.getPlayer().heldItem.stungun.reloading = true;
+                        } else {
+                            level.getPlayer().heldItem.stungun.reloading = false;
+                        }
+                    }
+                } else {
+                    energy += 0.2f;
+                }
             }
             if (energy > 4) {
                 recoverE = false;

@@ -15,13 +15,13 @@ public class Shape {
     private Enums.Shape shapeType;
     private Vector2 shapePosition;
     private float size;
-    public boolean changable;
+    public boolean changeable;
     public boolean solved;
 
     public Shape (Vector2 shapePosition, Level level, float size) {
         this.shapePosition = shapePosition;
         this.level = level;
-        changable = true;
+        changeable = true;
         shapeType = Enums.Shape.SQUARE;
         this.size = size;
         solved = false;
@@ -29,10 +29,10 @@ public class Shape {
     public void render (ShapeRenderer renderer) {
         //if puzzle is solved, prevent player from changing it
         if (solved) {
-            changable = false;
+            changeable = false;
         }
-        //toggle shapeTypes
-        if (level.touchPosition.x > shapePosition.x && level.touchPosition.x < shapePosition.x + 15 && level.touchPosition.y > shapePosition.y && level.touchPosition.y < shapePosition.y + 15 && changable) {
+        //toggle shapeTypes if tapped: SQUARE to TRIANGLE to CIRCLE then back to SQUARE
+        if (level.touchPosition.x > shapePosition.x && level.touchPosition.x < shapePosition.x + 15 && level.touchPosition.y > shapePosition.y && level.touchPosition.y < shapePosition.y + 15 && changeable) {
             if (shapeType == Enums.Shape.SQUARE) {
                 shapeType = Enums.Shape.TRIANGLE;
                 level.touchPosition = new Vector2();
@@ -44,15 +44,16 @@ public class Shape {
                 level.touchPosition = new Vector2();
             }
         }
-
+        //draw shapes depending on type of shape
+        //change color depending on which shape it is. If square, draw purple. If circle, draw blue. If triangle, draw red. If solved, draw all gold. If not changeable, draw all dark gray.
         if (shapeType == Enums.Shape.SQUARE) {
-            renderer.setColor(solved ? Color.GOLD : Color.PURPLE);
+            renderer.setColor(solved ? Color.GOLD : (changeable ? Color.PURPLE : Color.GRAY));
             renderer.rect(shapePosition.x, shapePosition.y, size, size);
         } else if (shapeType == Enums.Shape.TRIANGLE) {
-            renderer.setColor(solved ? Color.GOLD : Color.RED);
+            renderer.setColor(solved ? Color.GOLD : (changeable ? Color.RED : Color.GRAY));
             renderer.triangle(shapePosition.x, shapePosition.y, shapePosition.x + size, shapePosition.y, shapePosition.x + (size/2f), shapePosition.y + size);
         } else if (shapeType == Enums.Shape.CIRCLE) {
-            renderer.setColor(solved ? Color.GOLD : Color.BLUE);
+            renderer.setColor(solved ? Color.GOLD : (changeable ? Color.BLUE : Color.GRAY));
             renderer.circle(shapePosition.x + (size/2f), shapePosition.y + (size/2f), (size/2f));
         }
     }
@@ -63,5 +64,9 @@ public class Shape {
 
     public void setShapeType (Enums.Shape newShape) {
         shapeType = newShape;
+    }
+
+    public void setShapePosition (Vector2 newShapePosition) {
+        shapePosition.set(newShapePosition);
     }
 }

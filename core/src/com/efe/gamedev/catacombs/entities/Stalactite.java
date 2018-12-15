@@ -8,6 +8,7 @@ import com.efe.gamedev.catacombs.Level;
 
 /**
  * Created by coder on 5/29/2018.
+ * Stalactites which fall from the ceiling and are a danger to the player.
  */
 
 public class Stalactite {

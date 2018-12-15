@@ -36,17 +36,19 @@ public class Catacomb {
     Vector2 bottomRight;
 
     public Vector2 bottomLeftOffset;
-    Vector2 middleLeftOffset;
+    public Vector2 middleLeftOffset;
     Vector2 topLeftOffset;
-    Vector2 bottomRightOffset;
-    Vector2 middleRightOffset;
-    Vector2 bottomsOffset;
+    public Vector2 bottomRightOffset;
+    public Vector2 middleRightOffset;
+    public Vector2 bottomsOffset;
 
     //drop stalactites
     public boolean stalactites;
     public boolean drop;
+    public boolean floorSpikes;
     private Array<Stalactite> catacombStalactites;
     private Level level;
+    private float fadeRed;
 
     public Catacomb (Vector2 position, String Door1, String Door2, String Door3, String Door4, String Door5, String Door6, Level level) {
         this.position = position;
@@ -77,10 +79,13 @@ public class Catacomb {
         stalactites = false;
         drop = false;
         catacombStalactites = new Array<Stalactite>();
+        floorSpikes = false;
         this.level = level;
+        fadeRed = 0;
     }
 
     public void update (float delta) {
+        /* MOVE CATACOMB WALLS */
         //Move catacomb walls when they are unlocked or locked
         float moveSpeed = 80;
         //bottomLeft
@@ -88,11 +93,17 @@ public class Catacomb {
             if (bottomLeftOffset.y < 60) {
                 bottomLeftOffset.y += delta * moveSpeed;
                 bottomLeftOffset.x -= delta * (moveSpeed * 0.6f);
+            } else {
+                bottomLeftOffset.y = 60;
+                bottomLeftOffset.x = -36.5f;
             }
-        } else if (lockedDoors.get(0).equals("Locked") || lockedDoors.get(0).equals("DoubleLocked")) {
+        } else if (lockedDoors.get(0).equals("Locked") || lockedDoors.get(0).equals("DoubleLocked") || lockedDoors.get(0).equals("Closed")) {
             if (bottomLeftOffset.y > 0) {
                 bottomLeftOffset.y -= delta * moveSpeed;
                 bottomLeftOffset.x += delta * (moveSpeed * 0.6f);
+            } else {
+                bottomLeftOffset.y = 0;
+                bottomLeftOffset.x = 0;
             }
         }
         //middleLeft
@@ -100,17 +111,31 @@ public class Catacomb {
             if (middleLeftOffset.y < 60) {
                 middleLeftOffset.y += delta * moveSpeed;
                 middleLeftOffset.x += delta * (moveSpeed * 0.6f);
+            } else {
+                middleLeftOffset.y = 60;
+                middleLeftOffset.x = 36.5f;
             }
-        } else if (lockedDoors.get(1).equals("Locked") || lockedDoors.get(1).equals("DoubleLocked")) {
+        } else if (lockedDoors.get(1).equals("Locked") || lockedDoors.get(1).equals("DoubleLocked") || lockedDoors.get(1).equals("Closed")) {
             if (middleLeftOffset.y > 0) {
                 middleLeftOffset.y -= delta * moveSpeed;
                 middleLeftOffset.x -= delta * (moveSpeed * 0.6f);
+            }else {
+                middleLeftOffset.y = 0;
+                middleLeftOffset.x = 0;
             }
         }
         //top
         if (lockedDoors.get(2).equals("Unlocked")) {
-            if (topLeftOffset.x < 80) {
+            if (topLeftOffset.x < (level.superior.currentLevel == 14 ? (width - 250) : (width - 120))) {
                 topLeftOffset.x += delta * moveSpeed * 2f;
+            } else {
+                topLeftOffset.x = (level.superior.currentLevel == 14 ? (width - 250) : (width - 120));
+            }
+        } else {
+            if (topLeftOffset.x > 0) {
+                topLeftOffset.x -= delta * moveSpeed * 2f;
+            } else {
+                topLeftOffset.x = 0;
             }
         }
         //middleRight
@@ -118,11 +143,17 @@ public class Catacomb {
             if (middleRightOffset.y < 60) {
                 middleRightOffset.y += delta * moveSpeed;
                 middleRightOffset.x -= delta * (moveSpeed * 0.6f);
+            } else {
+                middleRightOffset.y = 60;
+                middleRightOffset.x = -36.5f;
             }
-        } else if (lockedDoors.get(3).equals("Locked") || lockedDoors.get(3).equals("DoubleLocked")) {
+        } else if (lockedDoors.get(3).equals("Locked") || lockedDoors.get(3).equals("DoubleLocked") || lockedDoors.get(3).equals("Closed")) {
             if (middleRightOffset.y > 0) {
                 middleRightOffset.y -= delta * moveSpeed;
                 middleRightOffset.x += delta * (moveSpeed * 0.6f);
+            } else {
+                middleRightOffset.y = 0;
+                middleRightOffset.x = 0;
             }
         }
         //bottomRight
@@ -130,44 +161,66 @@ public class Catacomb {
             if (bottomRightOffset.y < 60) {
                 bottomRightOffset.y += delta * moveSpeed;
                 bottomRightOffset.x += delta * (moveSpeed * 0.6f);
+            } else {
+                bottomRightOffset.y = 60;
+                bottomRightOffset.x = 36.5f;
             }
-        } else if (lockedDoors.get(4).equals("Locked") || lockedDoors.get(4).equals("DoubleLocked")) {
+        } else if (lockedDoors.get(4).equals("Locked") || lockedDoors.get(4).equals("DoubleLocked") || lockedDoors.get(4).equals("Closed")) {
             if (bottomRightOffset.y > 0) {
                 bottomRightOffset.y -= delta * moveSpeed;
                 bottomRightOffset.x -= delta * (moveSpeed * 0.6f);
+            } else {
+                bottomRightOffset.y = 0;
+                bottomRightOffset.x = 0;
             }
         }
         //bottom
         if (lockedDoors.get(5).equals("Unlocked")) {
-            if (bottomsOffset.x > -80) {
+            if (bottomsOffset.x > (-1 * (width - 120))) {
                 bottomsOffset.x -= delta * moveSpeed * 2f;
+            } else {
+                bottomsOffset.x = (-1 * (width - 120));
+            }
+        } else {
+            if (bottomsOffset.x < 0) {
+                bottomsOffset.x += delta * moveSpeed * 2f;
+            } else {
+                bottomsOffset.x = 0;
             }
         }
-        //stalactite update
+        /* UPDATE STALACTITES */
+        //loop through all stalactites, if drop is true, then spawn stalactites in random positions and remove them if they touch the player or ground.
         for (int i = 0; i < catacombStalactites.size; i++) {
             if (drop) {
                 catacombStalactites.get(i).update(delta);
                 if (catacombStalactites.get(i).position.y < bottomLeft.y + catacombStalactites.get(i).size) {
-                    catacombStalactites.get(i).hit = true;
+                    if (!catacombStalactites.get(i).hit) {
+                        catacombStalactites.get(i).hit = true;
+                        level.gameplayScreen.sound8.play();
+                    }
                     if (catacombStalactites.get(i).fadeTimer > 20) {
                         catacombStalactites.removeIndex(i);
                     }
                 }
                 //player yells when they get close
-                if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE * 4f) {
+                if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE * 4f && level.currentCatacomb == level.catacombs.indexOf(this, true)) {
                     level.getPlayer().mouthState = Enums.MouthState.OPEN;
                 }
                 //remove stalactites when hit player
                 if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE) {
                     if (level.getPlayer().health > 0) {
                         level.getPlayer().health -= 5;
+                        // Vibrate device for 400 milliseconds
+                        Gdx.input.vibrate(400);
                     }
                     catacombStalactites.removeIndex(i);
                 }
             }
         }
+        //spawn stalactites
         if (drop) {
-            if (MathUtils.random() < delta * 5f) {
+            //spawn rate of stalactites is less if you are in a smaller catacomb
+            if (MathUtils.random() < (width == 300 ? (delta * 5f) : (delta * 3f))) {
                 catacombStalactites.add(new Stalactite(new Vector2(MathUtils.random(position.x + 60, position.x + width - 50), (position.y + height) - 17), MathUtils.random(20, 30)));
             }
         }
@@ -175,6 +228,7 @@ public class Catacomb {
 
     public void render (ShapeRenderer renderer) {
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        //if the catacomb is a "long catacomb", set width to 300 and reset corners of catacomb
         if (longCatacomb) {
             width = 300;
             topLeft = new Vector2(position.x + 50, position.y + height - 15);
@@ -187,10 +241,33 @@ public class Catacomb {
         //general shape
         renderer.setColor(Color.GRAY);
         //renderer.ellipse(position.x, position.y, width, height, 0, 6);
+        //render the background shape of the catacomb
         renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleLeft.x, middleLeft.y);
         renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleRight.x, middleRight.y);
         renderer.triangle(topLeft.x, topLeft.y, topRight.x, topRight.y, middleRight.x, middleRight.y);
         renderer.triangle(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y, middleRight.x, middleRight.y);
+    }
+
+    //this renders a translucent red covering over the catacomb when the player tries to place an item in a catacomb that the player is not in.
+    public void renderRedCatacomb (ShapeRenderer renderer) {
+        //checks if the player is trying to place an item and if this is not the player's currentCatacomb
+        if (level.inventory.dragItem && level.catacombs.indexOf(this, true) != level.currentCatacomb) {
+            //red translucent color
+            renderer.setColor(new Color(Color.RED.r, Color.RED.g, Color.RED.b, fadeRed));
+            //render the red translucent shape of the catacomb
+            renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleLeft.x, middleLeft.y);
+            renderer.triangle(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, middleRight.x, middleRight.y);
+            renderer.triangle(topLeft.x, topLeft.y, topRight.x, topRight.y, middleRight.x, middleRight.y);
+            renderer.triangle(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y, middleRight.x, middleRight.y);
+            //make covering gradually look red
+            if (fadeRed < 0.3f) {
+                fadeRed += 0.01f;
+            }
+        } else {
+            if (fadeRed > 0f) {
+                fadeRed -= 0.01f;
+            }
+        }
     }
 
     public void renderWalls (ShapeRenderer renderer) {
@@ -211,6 +288,14 @@ public class Catacomb {
                 catacombStalactites.get(i).render(renderer);
             }
         }
+        //draw spikes on floor
+        if (floorSpikes) {
+            for (int i = 0; i < (width - 100); i += 10) {
+                //draw spikes
+                renderer.setColor(Color.DARK_GRAY);
+                renderer.triangle((position.x + 60 + i) - (20 / 5), ((position.y + 30) - 17), (position.x + 60 + i) + (20 / 5), ((position.y + 30) - 17), (position.x + 60 + i), ((position.y + 30) - 17) + 20);
+            }
+        }
         //SHADOW
         renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, 0.5f));
         renderer.rectLine(bottomLeft.x + bottomLeftOffset.x + shadowOffset.x, bottomLeft.y + bottomLeftOffset.y + shadowOffset.y, middleLeft.x + shadowOffset.x, middleLeft.y + shadowOffset.y, wallThickness);
@@ -224,6 +309,10 @@ public class Catacomb {
         renderer.rectLine(topRight.x, topRight.y, middleRight.x + middleRightOffset.x, middleRight.y + middleRightOffset.y, wallThickness);
         renderer.rectLine(middleRight.x, middleRight.y, bottomRight.x + bottomRightOffset.x, bottomRight.y + bottomRightOffset.y, wallThickness);
         renderer.rectLine(bottomRight.x + bottomsOffset.x, bottomRight.y + bottomsOffset.y, bottomLeft.x, bottomLeft.y, wallThickness);
+    }
+
+    public boolean touchingFloorSpikes (Vector2 objectPosition) {
+        return (floorSpikes && objectPosition.x > bottomLeft.x && objectPosition.x < bottomRight.x && objectPosition.y > bottomLeft.y && objectPosition.y < bottomLeft.y + 20);
     }
 
     public void renderButton (ShapeRenderer renderer) {

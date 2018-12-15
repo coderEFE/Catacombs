@@ -1,6 +1,7 @@
 package com.efe.gamedev.catacombs.util;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 
 /**
  * Created by coder on 11/13/2017.
@@ -11,6 +12,12 @@ public class Constants {
     //World and general Constants
     public static final Color BACKGROUND_COLOR = Color.BROWN;
     public static final float WORLD_SIZE = 160;
+    //menu
+    public static final float MENU_WORLD_SIZE = 480.0f;
+    public static final Color MENU_BACKGROUND_COLOR = Color.BLUE;
+    public static String CURRENT_SONG = "black_vortex";
+    public static float SONG_POSITION = 0;
+    //public static
     //default gravity is 10
     public static final float GRAVITY = 10;
 
@@ -20,7 +27,8 @@ public class Constants {
 
     //Player Constants
     public static final Color SKIN_COLOR = Color.TAN;
-    public static final Color CLOTHES_COLOR = Color.GOLDENROD;
+    public static final Color PRISONER_SKIN_COLOR = new Color((1 / 255f) * 133, (1 / 255f) * 88, (1 / 255f) * 30, 1f);
+    public static final Color BOSS_SKIN_COLOR = new Color((1 / 255f) * 163, (1 / 255f) * 166, (1 / 255f) * 148, 1f);
     public static final Color GUARD_CLOTHES_COLOR = new Color(0.3f, 0.3f, 0.4f, 1);
     public static final int HEAD_SEGMENTS = 40;
     public static final float HEAD_SIZE = 8;

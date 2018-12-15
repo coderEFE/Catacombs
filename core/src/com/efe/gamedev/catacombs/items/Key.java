@@ -27,8 +27,12 @@ public class Key {
         shadow = true;
     }
 
-    public void render (ShapeRenderer renderer) {
+    public void render (ShapeRenderer renderer, boolean doubleKey) {
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        //if key is a doubleKey, then have a big width
+        if (doubleKey) {
+            keyWidth = 10;
+        }
         //make the different directions for key
         if (keyFacing == Enums.Facing.LEFT) {
             if (shadow) {
@@ -37,31 +41,43 @@ public class Key {
                 renderer.rectLine(position.x + shadowOffset.x, position.y + shadowOffset.y, position.x + keyWidth + shadowOffset.x, position.y + shadowOffset.y, 1);
                 //picks on key
                 renderer.rectLine(position.x + shadowOffset.x, position.y + shadowOffset.y, position.x + shadowOffset.x, (position.y - 3) + shadowOffset.y, 1);
-                renderer.rectLine(position.x + (keyWidth / 5f) + shadowOffset.x, position.y + shadowOffset.y, position.x + (keyWidth / 5f) + shadowOffset.x, (position.y - 2) + shadowOffset.y, 1);
+                renderer.rectLine(position.x + (doubleKey ? (keyWidth / 6f) : (keyWidth / 5f)) + shadowOffset.x, position.y + shadowOffset.y, position.x + (doubleKey ? (keyWidth / 6f) : (keyWidth / 5f)) + shadowOffset.x, (position.y - 2) + shadowOffset.y, 1);
+                //add a fourth if key is a doubleKey
+                if (doubleKey) {
+                    renderer.rectLine(position.x + (keyWidth / 4f) + shadowOffset.x, position.y + shadowOffset.y, position.x + (keyWidth / 4f) + shadowOffset.x, (position.y - 2) + shadowOffset.y, 1);
+                }
                 renderer.rectLine(position.x + (keyWidth * 0.4f) + shadowOffset.x, position.y + shadowOffset.y, position.x + (keyWidth * 0.4f) + shadowOffset.x, (position.y - 3) + shadowOffset.y, 1);
                 //hand grip (the circle)
                 renderer.circle(position.x + keyWidth + shadowOffset.x, position.y + shadowOffset.y, 2, 10);
             }
             //ACTUAL
-            //draw golden key
-            renderer.setColor(Color.GOLD);
+            //draw golden key if normal, else if key is a doubleKey, then draw key purple
+            renderer.setColor(doubleKey ? Color.PURPLE : Color.GOLD);
             //main line
             renderer.rectLine(position.x, position.y, position.x + keyWidth, position.y, 1);
             //picks on key
             renderer.rectLine(position.x, position.y, position.x, position.y - 3, 1);
-            renderer.rectLine(position.x + (keyWidth / 5f), position.y, position.x + (keyWidth / 5f), position.y - 2, 1);
+            renderer.rectLine(position.x + (doubleKey ? (keyWidth / 6f) : (keyWidth / 5f)), position.y, position.x + (doubleKey ? (keyWidth / 6f) : (keyWidth / 5f)), position.y - 2, 1);
+            //add a fourth if key is a doubleKey
+            if (doubleKey) {
+                renderer.rectLine(position.x + (keyWidth / 4f), position.y, position.x + (keyWidth / 4f), position.y - 2, 1);
+            }
             renderer.rectLine(position.x + (keyWidth * 0.4f), position.y, position.x + (keyWidth * 0.4f), position.y - 3, 1);
             //hand grip (the circle)
             renderer.circle(position.x + keyWidth, position.y, 2, 10);
         } else if (keyFacing == Enums.Facing.RIGHT) {
             //No shadow for this direction
-            //draw golden key
-            renderer.setColor(Color.GOLD);
+            //draw golden key if normal, else if key is a doubleKey, then draw key purple
+            renderer.setColor(doubleKey ? Color.PURPLE : Color.GOLD);
             //main line
             renderer.rectLine(position.x, position.y, position.x + keyWidth, position.y, 1);
             //picks on key
             renderer.rectLine(position.x + keyWidth, position.y, position.x + keyWidth, position.y - 3, 1);
-            renderer.rectLine(position.x + keyWidth - (keyWidth / 5f), position.y, position.x + keyWidth - (keyWidth / 5f), position.y - 2, 1);
+            renderer.rectLine(position.x + keyWidth - (keyWidth / 6f), position.y, position.x + keyWidth - (keyWidth / 5f), position.y - 2, 1);
+            //add a fourth if key is a doubleKey
+            if (doubleKey) {
+                renderer.rectLine(position.x + keyWidth - (keyWidth / 4f), position.y, position.x + keyWidth - (keyWidth / 4f), position.y - 2, 1);
+            }
             renderer.rectLine(position.x + keyWidth - (keyWidth * 0.4f), position.y, position.x + keyWidth - (keyWidth * 0.4f), position.y - 3, 1);
             //hand grip (the circle)
             renderer.circle(position.x, position.y, 2, 10);

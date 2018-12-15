@@ -26,17 +26,6 @@ public class Phone {
     public void render (ShapeRenderer renderer) {
         renderer.set(ShapeRenderer.ShapeType.Filled);
         //make the phone
-        if (shadow) {
-            //SHADOW
-            /*renderer.setColor(Constants.SHADOW_COLOR);
-            renderer.set(ShapeRenderer.ShapeType.Filled);
-            renderer.triangle(position.x + shadowOffset.x, position.y + shadowOffset.y, position.x + shadowOffset.x + goldWidth/4, position.y + shadowOffset.y + 4, position.x + shadowOffset.x + goldWidth, position.y + shadowOffset.y);
-            renderer.triangle(position.x + shadowOffset.x + goldWidth/4, position.y + shadowOffset.y + 4, position.x + shadowOffset.x + (goldWidth*0.75f), position.y + shadowOffset.y + 4, position.x + shadowOffset.x + goldWidth, position.y + shadowOffset.y);
-            renderer.triangle(position.x + shadowOffset.x, position.y + shadowOffset.y - 4, position.x + shadowOffset.x + goldWidth/4, position.y + shadowOffset.y, position.x + shadowOffset.x + goldWidth, position.y + shadowOffset.y - 4);
-            renderer.triangle(position.x + shadowOffset.x + goldWidth/4, position.y + shadowOffset.y, position.x + shadowOffset.x + (goldWidth*0.75f), position.y + shadowOffset.y, position.x + shadowOffset.x + goldWidth, position.y + shadowOffset.y - 4);
-        */
-        }
-        //ACTUAL
         //Draw phone, looks like a walkie-talkie
         renderer.setColor(Color.DARK_GRAY);
         renderer.set(ShapeRenderer.ShapeType.Filled);

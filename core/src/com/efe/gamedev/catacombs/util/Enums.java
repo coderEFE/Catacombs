@@ -37,4 +37,11 @@ public class Enums {
         FIGHT,
         DEFEATED
     }
+    //Boss states
+    public enum BossState {
+        NORMAL,
+        HUNT,
+        ATTACK,
+        SMASH
+    }
 }

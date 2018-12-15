@@ -17,7 +17,7 @@ import com.efe.gamedev.catacombs.Level;
 
 public class Word {
     private String[] letters;
-    private Vector2[] letterPositions;
+    public Vector2[] letterPositions;
     private String collectedString;
     private Array<Boolean> collected;
     private float countdown;
@@ -35,7 +35,7 @@ public class Word {
             collected.add(false);
         }
         countdown = 0;
-        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT"));
+        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT") || collectedString.equals("RUBY") || collectedString.equals("POTION") || collectedString.equals("DOOR"));
         //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         this.level = level;
         solved = false;
@@ -43,14 +43,16 @@ public class Word {
 
     public void renderText (SpriteBatch batch, BitmapFont font) {
         //update word standards
-        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT"));
+        isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT") || collectedString.equals("RUBY") || collectedString.equals("POTION") || collectedString.equals("DOOR"));
         //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         //draw letters and check if they have been collected
         for (int i = 0; i < letters.length; i++) {
-            if (level.touchPosition.dst(letterPositions[i]) < 12 && !collected.get(i)) {
+            //if you tap on letter and it is not already collected, it gets added to the word above your head and becomes collected.
+            if (level.touchPosition.dst(letterPositions[i]) < 12 && !collected.get(i) && !level.touchPosition.equals(new Vector2())) {
                 collectedString = collectedString + letters[i];
                 collected.set(i, true);
             }
+            //draw letter if it has not been collected
             if (!collected.get(i)) {
                 font.draw(batch, letters[i], letterPositions[i].x, letterPositions[i].y);
             }
@@ -69,7 +71,7 @@ public class Word {
                 level.touchPosition = new Vector2();
             }
         }
-        if (isAWord) {
+        if (isAWord && (collectedString.length() == letters.length)) {
             if (countdown < 51) {
                 countdown++;
             } else {
@@ -90,22 +92,34 @@ public class Word {
                 if (collectedString.equals("EXIT")) {
                     level.exitDoor.show = true;
                 }
+                if (collectedString.equals("RUBY")) {
+                    level.inventory.inventoryItems.add(new Item(new Vector2(), level.viewportPosition, "ruby"));
+                }
+                if (collectedString.equals("POTION")) {
+                    level.inventory.inventoryItems.add(new Item(new Vector2(), level.viewportPosition, "ghost"));
+                }
+                if (collectedString.equals("DOOR")) {
+                    level.doors.get(0).show = true;
+                }
+                //remove word
+                level.words.removeIndex(level.words.indexOf(this, true));
             }
         }
     }
+    //render collected text over player's head: if a real word is made, the letters flash gold before turning into an item or something. If a real word is not made but all letters have been used, the letters flash red before resetting to their original positions.
     public void renderCollectedText (SpriteBatch batch, BitmapFont font, Viewport hudViewport) {
         if (countdown > 1) {
             if ((!isAWord && collectedString.length() == letters.length)) {
                 font.setColor(Color.RED);
             }
-            if (isAWord) {
+            if (isAWord && (collectedString.length() == letters.length)) {
                 font.setColor(Color.GOLD);
                 solved = true;
             }
         }
         else {
             font.setColor(Color.WHITE);
-        }
-        font.draw(batch, collectedString, hudViewport.getWorldWidth() / 2f - (level.words.indexOf(this, true) * (collectedString.length() * 3f)), hudViewport.getWorldHeight() / 1.6f);
+        }// - (collectedString.length() * 3.5f)
+        font.draw(batch, collectedString, ((hudViewport.getWorldWidth() / 2f) - (level.words.indexOf(this, true) * ((collectedString.length() + 5) * 5f))), hudViewport.getWorldHeight() / 1.6f);
     }
 }

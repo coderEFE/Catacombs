@@ -25,7 +25,7 @@ public class Guard {
     //rotate arms
     public float armRotate;
 
-    //player jumpState
+    //guard jumpState
     public Enums.JumpState jumpState;
 
     //rotate legs
@@ -43,6 +43,9 @@ public class Guard {
     //mouth frames
     public Enums.MouthState mouthState;
     private float mouthFrameTimer;
+    //look both ways
+    public boolean suspicious;
+    private float suspicionTimer;
 
     //The item that the guard holds
     public Item heldItem;
@@ -68,7 +71,15 @@ public class Guard {
     private float timeSeeingPlayer;
     //fight with player
     public float guardEnergy;
+    public float health;
+    public boolean danger;
     private boolean weaponForward;
+
+    //sleeping
+    public boolean asleep;
+    private float sleepTimer;
+    //shocked
+    private float shockTimer;
 
     public Guard (Vector2 position, Level level) {
         this.position = position;
@@ -77,7 +88,7 @@ public class Guard {
         spawnOpacity = 1;
         legRotate = 170;
         startTime = TimeUtils.nanoTime();
-        //get velocity and start player off as falling
+        //get velocity and start guard off as falling
         velocity = new Vector2();
         jumpState = Enums.JumpState.FALLING;
         //initialize eyes
@@ -105,7 +116,14 @@ public class Guard {
         chasePlayer = false;
         waitTimer = 0;
         guardEnergy = 15;
+        health = 20;
+        danger = false;
         weaponForward = false;
+        suspicious = false;
+        suspicionTimer = 0;
+        asleep = false;
+        sleepTimer = 0;
+        shockTimer = 0;
     }
 
     public void update (float delta) {
@@ -136,6 +154,7 @@ public class Guard {
                 patrolLeft = false;
                 patrolRight = true;
             }
+            suspicious = false;
         }
         //see if guard wants to chase player
         if (chasePlayer) {
@@ -150,7 +169,14 @@ public class Guard {
         }
         //guard chases you
         if (guardState == Enums.GuardState.ATTACK) {
-            targetPosition.set(level.getPlayer().getPosition());
+            //guard gets confused if it tries to attack player and player turns invisible
+            if (!level.getPlayer().invisibility) {
+                targetPosition.set(level.superior.currentLevel != 14 ? level.getPlayer().getPosition() : new Vector2(230, -20));
+                tryJumping();
+                suspicious = false;
+            } else {
+                suspicious = true;
+            }
             //after a while of not seeing player, guard will resume patrolling
             if (position.dst(level.getPlayer().getPosition()) > 100) {
                 unsureTimer++;
@@ -161,14 +187,15 @@ public class Guard {
                 guardState = Enums.GuardState.PATROLLING;
             }
         }
-        //check if guard spots you
-        if (position.dst(level.getPlayer().getPosition()) < 50 && guardState != Enums.GuardState.ATTACK) {
+        //check if guard spots player, or, if player is invisible and guard touches player.
+        if ((position.dst(level.getPlayer().getPosition()) < 50 && guardState != Enums.GuardState.ATTACK && guardState != Enums.GuardState.DEFEATED && !level.getPlayer().invisibility) || (guardTouchesPlayer() && guardState != Enums.GuardState.ATTACK && guardState != Enums.GuardState.DEFEATED && level.getPlayer().invisibility) && level.superior.currentLevel == 7) {
             if (((position.x >= level.getPlayer().getPosition().x && facing == Enums.Facing.LEFT) || (position.x <= level.getPlayer().getPosition().x && facing == Enums.Facing.RIGHT)) && jumpState == Enums.JumpState.GROUNDED) {
                 alert = true;
                 guardState = Enums.GuardState.ALERT;
             }
         } else {
-            if (alertTimer < 50 && alert) {
+            //if player runs out of guard's sight and guard is currently alert, set guardState to UNSURE and have guard try to find player
+            if (alertTimer < 50 && alert && guardState != Enums.GuardState.DEFEATED) {
                 alertTimer++;
             } else if (alertTimer >= 50) {
                 unsureTimer = 0;
@@ -179,7 +206,7 @@ public class Guard {
         }
         //If guard sees player for long enough, it will talk to player.
         if (guardState == Enums.GuardState.ALERT) {
-            if (timeSeeingPlayer < 100 && !talkToPlayer) {
+            if (timeSeeingPlayer < 100 && !talkToPlayer && !level.getPlayer().invisibility) {
                 timeSeeingPlayer++;
             }
             if (timeSeeingPlayer > 99) {
@@ -193,18 +220,24 @@ public class Guard {
             timeSeeingPlayer = 0;
             unsureTimer++;
             if (unsureTimer >= 200 && jumpState == Enums.JumpState.GROUNDED) {
+                suspicious = false;
                 unsureTimer = 0;
                 guardState = Enums.GuardState.PATROLLING;
             }
-            if (level.getPlayer().getPosition().x < position.x && jumpState == Enums.JumpState.GROUNDED) {
-                facing = Enums.Facing.LEFT;
-                targetPosition.set(level.getPlayer().getPosition().x - 10, level.getPlayer().getPosition().y);
-            } else if (level.getPlayer().getPosition().x >= position.x && jumpState == Enums.JumpState.GROUNDED) {
-                facing = Enums.Facing.RIGHT;
-                targetPosition.set(level.getPlayer().getPosition().x + 10, level.getPlayer().getPosition().y);
+            //if player is not invisible, try to find player
+            if (!level.getPlayer().invisibility) {
+                if (level.getPlayer().getPosition().x < position.x && jumpState == Enums.JumpState.GROUNDED) {
+                    facing = Enums.Facing.LEFT;
+                    targetPosition.set(level.getPlayer().getPosition().x - 10, level.getPlayer().getPosition().y);
+                } else if (level.getPlayer().getPosition().x >= position.x && jumpState == Enums.JumpState.GROUNDED) {
+                    facing = Enums.Facing.RIGHT;
+                    targetPosition.set(level.getPlayer().getPosition().x + 10, level.getPlayer().getPosition().y);
+                }
+                //try jumping to find player when unsure
+                tryJumping();
+            } else {
+                suspicious = true;
             }
-            //try jumping to find player when unsure
-            tryJumping();
         }
         //look at player when alert
         if (alert) {
@@ -213,7 +246,9 @@ public class Guard {
             } else if (level.getPlayer().getPosition().x < position.x) {
                 facing = Enums.Facing.LEFT;
             }
-            targetPosition.set(level.getPlayer().getPosition());
+            if (guardState != Enums.GuardState.DEFEATED && !level.getPlayer().invisibility) {
+                targetPosition.set(level.getPlayer().getPosition());
+            }
         }
         //make sure player is facing guard
         if (talkToPlayer) {
@@ -224,15 +259,22 @@ public class Guard {
             makePlayerMoveWhileTalking();
         }
         //make guard look around at player
-        lookAround(delta, 5);
+        if (!suspicious) {
+            lookAround(delta, 5, targetPosition);
+            //reset suspicionTimer
+            suspicionTimer = 0;
+        } else {
+            //if suspicious, look both ways several times
+            lookBothWays(delta);
+        }
         //guard states
         if (!targetPosition.equals(new Vector2()) && (insideCatacomb() || outsideCatacombLeft() || outsideCatacombRight())) {
             if (guardState == Enums.GuardState.PATROLLING) {
-                moveGuard(delta, 20);
+                moveGuard(delta, 20, targetPosition);
             } else if (guardState == Enums.GuardState.ALERT) {
                 resetLegs();
             } else if (guardState != Enums.GuardState.DEFEATED) {
-                moveGuard(delta, jumpState == Enums.JumpState.FALLING ? 60 : 40);
+                moveGuard(delta, jumpState == Enums.JumpState.FALLING ? 60 : 40, targetPosition);
             }
         }
         //stop guard from falling below current catacomb if bottom is locked
@@ -263,7 +305,7 @@ public class Guard {
             heldItem.itemType = "";
         }
         //set up weapon push
-        if (level.getPlayer().fighting) {
+        if (level.getPlayer().fighting && level.currentCatacomb == guardCatacomb) {
             //adjust guard position if to close to player
             if (level.getPlayer().getPosition().x > position.x && position.x != level.getPlayer().getPosition().x - 30) {
                 position.x = level.getPlayer().getPosition().x - 30;
@@ -296,6 +338,34 @@ public class Guard {
                 }
             }
         }
+
+        if (shockTimer > 0) {
+            shockTimer--;
+            guardState = Enums.GuardState.DEFEATED;
+            if (armRotate < 50) {
+                armRotate += 4f;
+            }
+            mouthState = Enums.MouthState.OPEN;
+            resetLegs();
+            //drop any items
+            if (!guardItem.equals("")) {
+                level.items.add(new Item(new Vector2(position.x, position.y - 50), level.viewportPosition, guardItem));
+                guardItem = "";
+            }
+        } else {
+            shockTimer = 0;
+            if (guardState != Enums.GuardState.ATTACK) {
+                guardState = Enums.GuardState.PATROLLING;
+            }
+            if (armRotate > 0) {
+                armRotate -= 2f;
+                mouthState = Enums.MouthState.NORMAL;
+            }
+        }
+        //player shocks (with electricity) guard.
+        if (level.getPlayer().shock && guardTouchesPlayer()) {
+            shockTimer = 400;
+        }
     }
 
     public boolean guardTouchesPlayer () {
@@ -313,10 +383,34 @@ public class Guard {
         return guardBounds.overlaps(playerBounds);
     }
 
+    //detects if this guard touches another guard's back
+    private boolean guardTouchesGuardBack () {
+        boolean guardTouchBack = false;
+        //this guard's bounds
+        Rectangle guardBounds = new Rectangle(jumpState.equals(Enums.JumpState.GROUNDED) ? (position.x - Constants.HEAD_SIZE) - 12 : (position.x - Constants.HEAD_SIZE),
+                position.y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f,
+                jumpState.equals(Enums.JumpState.GROUNDED) ? (Constants.PLAYER_WIDTH * 2f) + 12 : (Constants.PLAYER_WIDTH * 2f),
+                Constants.PLAYER_HEIGHT * 2.5f);
+        //loop through guards
+        for (int i = 0; i < level.guards.size; i++) {
+            //other guards' bounds
+            Rectangle otherGuardBounds = new Rectangle(jumpState.equals(Enums.JumpState.GROUNDED) ? (level.guards.get(i).position.x - Constants.HEAD_SIZE) - 12 : (level.guards.get(i).position.x - Constants.HEAD_SIZE),
+                    level.guards.get(i).position.y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f,
+                    jumpState.equals(Enums.JumpState.GROUNDED) ? (Constants.PLAYER_WIDTH * 2f) + 12 : (Constants.PLAYER_WIDTH * 2f),
+                    Constants.PLAYER_HEIGHT * 2.5f);
+            //if the other guard is truly a different guard, check if they overlap each other
+            if (i != level.guards.indexOf(this, true)) {
+                guardTouchBack = guardBounds.overlaps(otherGuardBounds) && (jumpState == Enums.JumpState.GROUNDED && level.guards.get(i).jumpState == Enums.JumpState.GROUNDED) && (facing == level.guards.get(i).facing) && (facing == Enums.Facing.LEFT ? position.x > level.guards.get(i).position.x : position.x < level.guards.get(i).position.x);
+            }
+        }
+        //return results
+        return guardTouchBack;
+    }
+
     private void tryJumping () {
         //try jumping
-        if (position.dst(level.getPlayer().getPosition()) < 150 && level.getPlayer().getPosition().y > position.y + 10 && jumpState == Enums.JumpState.GROUNDED) {
-            if (position.x < level.getPlayer().getPosition().x - 10) {
+        if (position.dst(level.getPlayer().getPosition()) < 250 && level.getPlayer().getPosition().y > position.y + 10 && jumpState == Enums.JumpState.GROUNDED) {
+            if (position.x < level.getPlayer().getPosition().x - 10 && (level.catacombs.get(guardCatacomb).getLockedDoors().get(3).equals("Unlocked")) && !level.catacombs.get(guardCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
                 facing = Enums.Facing.RIGHT;
                 if (position.x > level.catacombs.get(guardCatacomb).position.x + (level.catacombs.get(guardCatacomb).width - 57.14f)) {
                     velocity = new Vector2(30, 170);
@@ -324,13 +418,13 @@ public class Guard {
                 } else {
                     targetPosition.x = level.catacombs.get(guardCatacomb).position.x + (level.catacombs.get(guardCatacomb).width - 57.14f);
                 }
-            } else if (position.x > level.getPlayer().getPosition().x + 10) {
+            } else if (position.x > level.getPlayer().getPosition().x + 10 && (level.catacombs.get(guardCatacomb).getLockedDoors().get(1).equals("Unlocked")) && !level.catacombs.get(guardCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
                 facing = Enums.Facing.LEFT;
                 if (position.x < level.catacombs.get(guardCatacomb).position.x + (200 / 3.5f)) {
                     velocity = new Vector2(-30, 170);
                     jumpState = Enums.JumpState.JUMPING;
                 } else {
-                    targetPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (200 / 3.5f);
+                    targetPosition.x = level.catacombs.get(guardCatacomb).position.x + (200 / 3.5f) - 1;
                 }
             }
         }
@@ -358,14 +452,15 @@ public class Guard {
         }
     }
 
-    public void moveGuard (float delta, float moveSpeed) {
-        if ((!(position.x < targetPosition.x + 1) || !(position.x > targetPosition.x)) && !targetPosition.equals(new Vector2())) {
+    public void moveGuard (float delta, float moveSpeed, Vector2 movePosition) {
+        //function which moves guard towards its target position.
+        if ((!(position.x < movePosition.x + 1) || !(position.x > movePosition.x)) && !movePosition.equals(new Vector2()) && !guardTouchesGuardBack()) {
             //go left
-            if (position.x > targetPosition.x) {
+            if (position.x > movePosition.x) {
                 position.x -= delta * moveSpeed;
                 rotateLegs();
                 facing = Enums.Facing.LEFT;
-            } else if (position.x < targetPosition.x) {
+            } else if (position.x < movePosition.x) {
                 //go right
                 position.x += delta * moveSpeed;
                 rotateLegs();
@@ -437,32 +532,32 @@ public class Guard {
         return outsideWidth;
     }
 
-    private void lookAround (float delta, float moveSpeed) {
+    private void lookAround (float delta, float moveSpeed, Vector2 movePosition) {
 
         //set mouth moving speed
         float mouthSpeed = (moveSpeed / 2);
 
         //if viewport is touched
-        if (!targetPosition.equals(new Vector2())) {
+        if (!movePosition.equals(new Vector2())) {
             //move eye x
-            if (targetPosition.x + 0.5f > position.x && eyeLookLeft.x < 0) {
+            if (movePosition.x + 0.5f > position.x && eyeLookLeft.x < 0) {
                 eyeLookLeft.x += delta * moveSpeed;
                 eyeLookRight.x += delta * moveSpeed;
                 //move mouth
                 mouthOffset.x += delta * mouthSpeed;
-            } else if (targetPosition.x < position.x && eyeLookLeft.x > 0 - (Constants.HEAD_SIZE / 2)) {
+            } else if (movePosition.x < position.x && eyeLookLeft.x > 0 - (Constants.HEAD_SIZE / 2)) {
                 eyeLookLeft.x -= delta * moveSpeed;
                 eyeLookRight.x -= delta * moveSpeed;
                 //move mouth
                 mouthOffset.x -= delta * mouthSpeed;
             }
             //move eye y
-            if (targetPosition.y > position.y && eyeLookLeft.y < 0 + (Constants.HEAD_SIZE / 3)) {
+            if (movePosition.y > position.y && eyeLookLeft.y < 0 + (Constants.HEAD_SIZE / 3)) {
                 eyeLookLeft.y += delta * moveSpeed;
                 eyeLookRight.y += delta * moveSpeed;
                 //move mouth
                 mouthOffset.y += delta * mouthSpeed;
-            } else if (targetPosition.y < position.y && eyeLookLeft.y > 0) {
+            } else if (movePosition.y < position.y && eyeLookLeft.y > 0) {
                 eyeLookLeft.y -= delta * moveSpeed;
                 eyeLookRight.y -= delta * moveSpeed;
                 //move mouth
@@ -476,6 +571,21 @@ public class Guard {
             eyeLookRight = new Vector2(Constants.EYE_OFFSET, Constants.EYE_OFFSET - 1);
             //initialize mouth
             mouthOffset = new Vector2(0, -0.5f);
+        }
+    }
+
+    //look both ways
+    private void lookBothWays (float delta) {
+        //A simple timer loop that makes Guard look right, then look left, then repeat.
+        suspicionTimer++;
+        if (suspicionTimer > 0 && suspicionTimer <= 100) {
+            lookAround(delta, 5, new Vector2(position.x + 20, position.y + 20));
+            facing = Enums.Facing.RIGHT;
+        } else if (suspicionTimer > 100 && suspicionTimer <= 200) {
+            lookAround(delta, 5, new Vector2(position.x - 20, position.y + 20));
+            facing = Enums.Facing.LEFT;
+        } else if (suspicionTimer > 200) {
+            suspicionTimer = 0;
         }
     }
 
@@ -493,8 +603,8 @@ public class Guard {
         }
     }
 
-    private void resetLegs () {
-        //if player is on ground and resetLegs() is called, this will reset player's legs.
+    public void resetLegs () {
+        //if guard is on ground and resetLegs() is called, this will reset guard's legs.
         if (jumpState == Enums.JumpState.GROUNDED) {
             //reset legs back to original stance
             if (legRotate > 170) {
@@ -547,6 +657,28 @@ public class Guard {
         }
     }
 
+    //electricity
+    private void Spark (ShapeRenderer renderer, Vector2 startPosition, Vector2 endPosition) {
+        //calculate distance
+        //double distance = Math.sqrt(Math.pow((endPosition.x - startPosition.x), 2) + Math.pow((endPosition.y - startPosition.y), 2));
+        float xIncrement = (endPosition.x - startPosition.x) / 6;
+        float yIncrement = (endPosition.y - startPosition.y) / 6;
+        renderer.setColor(Color.GREEN);
+        Vector2 r1 = new Vector2(MathUtils.random(startPosition.x, startPosition.x + 3), MathUtils.random(startPosition.y, startPosition.y + 3));
+        Vector2 r2 = new Vector2(MathUtils.random(r1.x, r1.x + xIncrement), MathUtils.random(r1.y, r1.y + yIncrement));
+        Vector2 r3 = new Vector2(MathUtils.random(r2.x, r2.x + xIncrement), MathUtils.random(r2.y, r2.y + yIncrement));
+        Vector2 r4 = new Vector2(MathUtils.random(r3.x, r3.x + xIncrement), MathUtils.random(r3.y, r3.y + yIncrement));
+        Vector2 r5 = new Vector2(MathUtils.random(r4.x, r4.x + xIncrement), MathUtils.random(r4.y, r4.y + yIncrement));
+        Vector2 r6 = new Vector2(MathUtils.random(r5.x, r5.x + xIncrement), MathUtils.random(r5.y, r5.y + yIncrement));
+
+        renderer.line(startPosition, r1);
+        renderer.line(r1, r2);
+        renderer.line(r2, r3);
+        renderer.line(r3, r4);
+        renderer.line(r4, r5);
+        renderer.line(r5, r6);
+    }
+
     public void render (ShapeRenderer renderer) {
 
         //ShapeType
@@ -572,6 +704,13 @@ public class Guard {
         //BODY
         renderer.setColor(new Color(Constants.GUARD_CLOTHES_COLOR.r, Constants.GUARD_CLOTHES_COLOR.g, Constants.GUARD_CLOTHES_COLOR.b, spawnOpacity));
         renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.3f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+        //high ranking symbols
+        if (level.superior.currentLevel == 8) {
+            //high ranking symbols
+            renderer.setColor(new Color(Constants.GUARD_CLOTHES_COLOR.r * 0.4f, Constants.GUARD_CLOTHES_COLOR.g * 0.4f, Constants.GUARD_CLOTHES_COLOR.b * 0.4f, spawnOpacity));
+            renderer.rect((position.x - (Constants.HEAD_SIZE / 2)) + 1, position.y - (Constants.PLAYER_HEIGHT * 0.5f), Constants.PLAYER_WIDTH / 3f, Constants.PLAYER_HEIGHT / 11f);
+            renderer.rect((position.x - (Constants.HEAD_SIZE / 2)) + 1, position.y - (Constants.PLAYER_HEIGHT * 0.6f), Constants.PLAYER_WIDTH / 3f, Constants.PLAYER_HEIGHT / 11f);
+        }
         //belt
         renderer.setColor(new Color(0.2f, 0.2f, 0.2f, spawnOpacity));
         renderer.rect(position.x - (Constants.HEAD_SIZE / 2), position.y - (Constants.PLAYER_HEIGHT * 1.2f), Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT / 10);
@@ -591,6 +730,16 @@ public class Guard {
             renderer.rectLine(position.x, position.y + (Constants.HEAD_SIZE*2), position.x, position.y + Constants.HEAD_SIZE*3, Constants.HEAD_SIZE/6);
         }
 
+        //health bar
+        if (danger) {
+            renderer.setColor(Color.WHITE);
+            renderer.rectLine(position.x - 10, position.y + Constants.HEAD_SIZE * 1.5f, position.x + 10, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+            renderer.setColor(Color.BLUE);
+            renderer.rectLine(position.x - 10, position.y + Constants.HEAD_SIZE * 1.5f, (position.x - 10) + health, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+            renderer.setColor(Color.RED);
+            renderer.rectLine((position.x - 10) + health, position.y + Constants.HEAD_SIZE * 1.5f, position.x + 10, position.y + Constants.HEAD_SIZE * 1.5f, 4);
+        }
+
         //if fighting with player, show fight bar
         if (guardState == Enums.GuardState.FIGHT) {
             renderer.setColor(Color.WHITE);
@@ -606,14 +755,42 @@ public class Guard {
                 mouthState = Enums.MouthState.NORMAL;
             }
             if (!level.inventory.paused) {
-                guardEnergy += (MathUtils.random(0.01f, 0.05f));
+                guardEnergy += (level.superior.currentLevel == 4 ? MathUtils.random(0.01f, 0.05f) : MathUtils.random(0.04f, 0.08f));
             }
         }
 
+        //draw sleeping "Z"s
+        if (asleep) {
+            //switch between three Zs in different positions
+            sleepTimer ++;
+            if (sleepTimer >= 0 && sleepTimer <= 30) {
+                sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE), position.y + (Constants.HEAD_SIZE)), Constants.HEAD_SIZE / 2f, renderer);
+            } else if (sleepTimer > 30 && sleepTimer <= 60) {
+                sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE * 1.5f), position.y + (Constants.HEAD_SIZE * 1.5f)), Constants.HEAD_SIZE / 3f, renderer);
+            } else if (sleepTimer > 60 && sleepTimer <= 90) {
+                sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE * 2f), position.y + (Constants.HEAD_SIZE * 2f)), Constants.HEAD_SIZE / 4f, renderer);
+            } else if (sleepTimer > 90) {
+                sleepTimer = 0;
+            }
+        } else {
+            //reset sleepTimer
+            sleepTimer = 0;
+        }
+
         //eyes
-        renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
-        renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
-        renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
+        if (shockTimer > 0) {
+            renderer.setColor(new Color(Color.GREEN.r, Color.GREEN.g, Color.GREEN.b, spawnOpacity));
+        } else {
+            renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
+        }
+        //draw the eyes as circles when awake but as slits when asleep
+        if (!asleep) {
+            renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
+            renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
+        } else {
+            renderer.rectLine((eyeLookLeft.x + position.x) - (Constants.HEAD_SIZE / 10), eyeLookLeft.y + position.y, (eyeLookLeft.x + position.x) + (Constants.HEAD_SIZE / 10), eyeLookLeft.y + position.y, 0.5f);
+            renderer.rectLine((eyeLookRight.x + position.x) - (Constants.HEAD_SIZE / 10), eyeLookRight.y + position.y, (eyeLookRight.x + position.x) + (Constants.HEAD_SIZE / 10), eyeLookRight.y + position.y, 0.5f);
+        }
         //mouth
         renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
         //mouth states
@@ -623,6 +800,14 @@ public class Guard {
             renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
         } else if (mouthState == Enums.MouthState.TALKING) {
             talk(renderer, Constants.MOUTH_TALKING_SPEED);
+        }
+
+        //electricity shocking guard from player
+        if (shockTimer > 0) {
+            Spark(renderer, new Vector2(position.x - (Constants.PLAYER_WIDTH * 1.2f) - (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)), new Vector2(position.x + 10, position.y - Constants.HEAD_SIZE - 10));
+            Spark(renderer, new Vector2(position.x + (Constants.PLAYER_WIDTH * 1.2f) + (armRotate / 10f), position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (armRotate / 4f)), new Vector2(position.x + (Constants.HEAD_SIZE / 2) - (armRotate / 15f) - 10, position.y - (Constants.HEAD_SIZE / 1.2f) + (armRotate / 20f) - 10));
+            Spark(renderer, new Vector2((position.x - (Constants.HEAD_SIZE / 2)) + 2, position.y - (Constants.PLAYER_HEIGHT * 1.2f)), new Vector2((position.x - (Constants.HEAD_SIZE / 2)) - 8, position.y - (Constants.PLAYER_HEIGHT * 3f)));
+            Spark(renderer, new Vector2((position.x - (Constants.HEAD_SIZE / 2)) + 6, position.y - (Constants.PLAYER_HEIGHT * 1.2f)), new Vector2((position.x - (Constants.HEAD_SIZE / 2)) + 16, position.y - (Constants.PLAYER_HEIGHT * 3f)));
         }
 
         //Draw guard's cap
@@ -636,10 +821,19 @@ public class Guard {
             renderer.rect((position.x - Constants.HEAD_SIZE) + 2, position.y + Constants.HEAD_SIZE * 0.5f, (Constants.HEAD_SIZE * 2f) - 3, Constants.HEAD_SIZE / 2f);
             renderer.rect((position.x - Constants.HEAD_SIZE) + 1 + ((Constants.HEAD_SIZE * 2f) - 3), position.y + Constants.HEAD_SIZE * 0.5f, 5, Constants.HEAD_SIZE / 3f);
         }
-        //Draw Item player is holding
+        //Draw Item guard is holding
         if (jumpState == Enums.JumpState.GROUNDED) {
             heldItem.render(renderer, level);
         }
+    }
+    //draw Zs for sleeping animation
+    private void sleepZ (Vector2 zPosition, float size, ShapeRenderer renderer) {
+        //bottom line
+        renderer.rectLine(zPosition.x, zPosition.y, zPosition.x + size, zPosition.y, size / 5);
+        //top line
+        renderer.rectLine(zPosition.x, zPosition.y + size, zPosition.x + size, zPosition.y + size, size / 5);
+        //middle slanted line
+        renderer.rectLine(zPosition.x, zPosition.y, zPosition.x + size, zPosition.y + size, size / 5);
     }
 
 }

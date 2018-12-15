@@ -1,6 +1,7 @@
 package com.efe.gamedev.catacombs.entities;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -32,6 +33,7 @@ public class Button {
     private static final float PLAY_PERIOD = 1.5f;
     //decide if button is shown or not
     public boolean shown;
+
 
     public Button (Vector2 position, String type, float width, float height, Color color, final Runnable pressFunction, Level level) {
         this.position = position;
@@ -76,15 +78,33 @@ public class Button {
     }
 
     public void render (ShapeRenderer renderer) {
+        //set speech variable to be false if someone is speaking
+        if (level.show) {
+            speech = true;
+        }
         //render button if shown is true
         if (shown) {
             //run function when button is being touched
-            if (level.touchPosition.x > position.x && level.touchPosition.x < position.x + width && level.touchPosition.y > position.y && level.touchPosition.y < position.y + height && !level.touchPosition.equals(new Vector2())) {
+            if ((width < 30 || level.pressUp) && level.lookPosition.x > position.x && level.lookPosition.x < position.x + width && level.lookPosition.y > position.y && level.lookPosition.y < position.y + height && !level.lookPosition.equals(new Vector2()) && level.touchPosition.x > position.x && level.touchPosition.x < position.x + width && level.touchPosition.y > position.y && level.touchPosition.y < position.y + height && !level.touchPosition.equals(new Vector2())) {
                 pressFunction.run();
-                level.touchPosition = new Vector2();
+                //play button sound
+                if (type.equals("Play")) {
+                    level.gameplayScreen.sound2.play();
+                } else {
+                    level.gameplayScreen.sound1.play();
+                }
+                level.lookPosition = new Vector2();
             }
-            Color darkColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
-            Color lightColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+            //set colors for button icons
+            Color darkColor;
+            Color lightColor;
+            if (level.touchPosition.x > position.x && level.touchPosition.x < position.x + width && level.touchPosition.y > position.y && level.touchPosition.y < position.y + height && !level.touchPosition.equals(new Vector2()) && level.pressDown) {
+                darkColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                lightColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+            } else {
+                darkColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+                lightColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+            }
             //button
             renderer.set(ShapeRenderer.ShapeType.Filled);
             renderer.setColor(lightColor);
@@ -125,6 +145,14 @@ public class Button {
                     renderer.setColor(darkColor);
                     renderer.rectLine(position.x + width / 6f, position.y + height / 1.2f, position.x + width / 1.2f, position.y + height / 4f, width / 8f);
                 }
+            } else if (type.equals("Guide")) {
+                //question mark icon
+                renderer.setColor(lightColor);
+                renderer.ellipse(position.x + width / 2f - ((width / 8f) / 2f), position.y + height / 6f  - ((width / 8f) / 2f),width / 8f, height / 8f, 20);
+                renderer.rectLine(position.x + width / 2f, position.y + height / 4f, position.x + width / 2f, position.y + height / 1.9f, height / 8f);
+                renderer.arc(position.x + width / 2f, position.y + height / 1.5f, width / 4f, 260, 260, 40);
+                renderer.setColor(darkColor);
+                renderer.ellipse(position.x + width / 2f - ((width / 3.5f) / 2f), position.y + height / 1.5f - ((width / 3.5f) / 2f), width / 3.5f, width / 3.5f, 40);
             } else if (type.equals("Map")) {
                 //map icon
                 renderer.setColor(lightColor);

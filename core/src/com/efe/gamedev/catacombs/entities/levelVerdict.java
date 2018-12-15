@@ -41,24 +41,56 @@ public class levelVerdict {
         rotateIn = 0;
         timer = 0;
         resetButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Reset", 30, 30, Color.RED,
-                new Runnable () {public void run() { level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0; }},
+                new Runnable () {public void run() {
+                    //save progress
+                    if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
+                        level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
+                    }
+                    //save progress
+                    level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
+                    level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0;
+                }},
                 level);
         homeButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Home", 30, 30, Color.RED,
-                new Runnable () {public void run() { /*TODO: Make a home menu!*/ }},
+                new Runnable () {public void run() {
+                    //save progress
+                    if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
+                        level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
+                    }
+                    //save progress
+                    level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
+                    level.gameplayScreen.showMenuScreen(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
+                }},
                 level);
         playButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Play", 50, 30, Color.RED,
                 new Runnable () {public void run() {
-                    level.superior.currentLevel++;
-                    level.superior.configureLevel(level);
-                    level.getPlayer().spawnTimer = 0;
+                    //save progress
+                    if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
+                        level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
+                    }
+                    if (level.superior.currentLevel != 14) {
+                        //save progress
+                        level.gameplayScreen.game.setFurthestLevel((level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel));
+
+                        level.lastSeenBubble = 0;
+                        level.superior.currentLevel++;
+                        level.superior.configureLevel(level);
+                        level.getPlayer().spawnTimer = 0;
+                    } else {
+                        //if last level, go back to menu screen
+                        level.gameplayScreen.showMenuScreen(level.superior.furthestLevel);
+                    }
                 }},
                 level);
     }
 
     public void update (float delta) {
+        //make hexagon zoom in and rotate
         if (zoomIn < (level.viewport.getWorldHeight() * 1f)) {
             zoomIn += delta * 100;
             level.touchPosition = new Vector2();
+        } else {
+            zoomIn = (level.viewport.getWorldHeight() * 1f);
         }
         if (rotateIn < 179) {
             rotateIn += delta * 150;
@@ -91,18 +123,21 @@ public class levelVerdict {
         homeButton.color = new Color(verdict ? Color.FOREST : Color.RED);
         playButton.color = new Color(verdict ? Color.FOREST : Color.RED);
         resetButton.shown = true;
+        homeButton.shown = true;
+        //if verdict is false, don't include play button in pop-up menu
         if (!verdict) {
-            resetButton.position = new Vector2(level.getPlayer().getPosition().x - 20, level.getPlayer().getPosition().y - 30);
-            homeButton.shown = false;
+            //resetButton.position = new Vector2(level.getPlayer().getPosition().x - 20, level.getPlayer().getPosition().y - 30);
+            resetButton.position = new Vector2(level.getPlayer().getPosition().x - 40, level.getPlayer().getPosition().y - 30);
+            homeButton.position = new Vector2(level.getPlayer().getPosition().x, level.getPlayer().getPosition().y - 30);
             playButton.shown = false;
         } else {
             resetButton.position = new Vector2(level.getPlayer().getPosition().x - 40, level.getPlayer().getPosition().y - 30);
             homeButton.position = new Vector2(level.getPlayer().getPosition().x, level.getPlayer().getPosition().y - 30);
             playButton.position = new Vector2(level.getPlayer().getPosition().x - 30, level.getPlayer().getPosition().y - 65);
-            homeButton.shown = true;
             playButton.shown = true;
         }
         if (zoomIn > (level.viewport.getWorldHeight() * 0.8f)) {
+            //render each button
             resetButton.render(renderer);
             homeButton.render(renderer);
             playButton.render(renderer);
@@ -113,9 +148,9 @@ public class levelVerdict {
         //render text for ending
         if (rotateIn > 179) {
             font2.setColor(Color.DARK_GRAY);
-            font2.draw(batch, verdict ? "Victory!" : "You Lost", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f) - 3, (hudViewport.getWorldHeight() / 1.2f) + 3);
+            font2.draw(batch, verdict ? (level.superior.currentLevel == 14 ? "The End!" : "Victory!") : "You Lost", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f) - 3, (hudViewport.getWorldHeight() / 1.2f) + 3);
             font2.setColor(Color.BLACK);
-            font2.draw(batch, verdict ? "Victory!" : "You Lost", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f), hudViewport.getWorldHeight() / 1.2f);
+            font2.draw(batch, verdict ? (level.superior.currentLevel == 14 ? "The End!" : "Victory!") : "You Lost", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f), hudViewport.getWorldHeight() / 1.2f);
             font.setColor(verdict ? Color.DARK_GRAY : Color.GRAY);
             font.draw(batch, typedUpText, (hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 170f)) + ((28 - verdictPhrase.length()) * 5f), hudViewport.getWorldHeight() / 1.5f);
         }

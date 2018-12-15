@@ -36,7 +36,8 @@ public class Exit {
     }
 
     public void update (float delta) {
-        if (level.getPlayer().getPosition().x > buttonPosition.x && level.getPlayer().getPosition().x < buttonPosition.x + 30 && level.getPlayer().getPosition().y > buttonPosition.y + 20 && level.getPlayer().getPosition().y < buttonPosition.y + 70) {
+        if (!unlocked && level.getPlayer().getPosition().x > buttonPosition.x && level.getPlayer().getPosition().x < buttonPosition.x + 30 && level.getPlayer().getPosition().y > buttonPosition.y + 20 && level.getPlayer().getPosition().y < buttonPosition.y + 70) {
+            level.gameplayScreen.sound2.play();
             unlocked = true;
         }
         if (level.getPlayer().getPosition().x > position.x && level.getPlayer().getPosition().x < position.x + 30 && level.getPlayer().getPosition().y > position.y + 20 && level.getPlayer().getPosition().y < position.y + 70 && unlocked && level.getPlayer().jumpState == Enums.JumpState.GROUNDED && show) {
@@ -84,7 +85,22 @@ public class Exit {
             } else {
                 renderer.setColor(Color.MAROON);
             }
-            renderer.circle(position.x + 20, position.y + 35, 5, 6);
+            //draw two if currentLevel == 13 or 14, remember, level 14 is actually level 13 in the array
+            if (level.superior.currentLevel == 13 || level.superior.currentLevel == 14) {
+                renderer.circle(position.x + 13, position.y + 35, 2.5f, 6);
+                renderer.circle(position.x + 27, position.y + 35, 2.5f, 6);
+            } else {
+                renderer.circle(position.x + 20, position.y + 35, 5, 6);
+            }
+            //added stuff for elevator in the 14th and 15th level
+            if (level.superior.currentLevel == 13 || level.superior.currentLevel == 14) {
+                //line between doors
+                renderer.setColor(Color.DARK_GRAY);
+                renderer.rect(position.x + 20, position.y + 2, 2, 66);
+                //little button
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x - 4.5f, position.y + 35, 2.5f, 5);
+            }
         }
     }
 
@@ -97,5 +113,7 @@ public class Exit {
         renderer.setColor(Color.GREEN);
         renderer.rectLine((buttonPosition.x + 15) - buttonSlide, buttonPosition.y, (buttonPosition.x + 15) + buttonSlide, buttonPosition.y, 4);
     }
+    //used to set the exit button position
+    public void setButtonPosition (Vector2 newButtonPosition) { buttonPosition.set(newButtonPosition); }
 
 }
