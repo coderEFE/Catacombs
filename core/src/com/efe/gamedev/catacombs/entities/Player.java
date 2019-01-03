@@ -1,9 +1,7 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -11,8 +9,6 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
-
-import static java.lang.Math.random;
 
 /**
  * Created by coder on 11/13/2017.
@@ -22,8 +18,6 @@ import static java.lang.Math.random;
  */
 
 public class Player {
-    //TODO: when game is done, remove all these logging TAGs from the game.
-    public static final String TAG = Player.class.getName();
 
     //player position
     public Vector2 position;
@@ -52,7 +46,7 @@ public class Player {
     public boolean invisibility;
     public boolean ghost;
     public boolean shock;
-    public Color CLOTHES_COLOR = Color.GOLDENROD;
+    private Color CLOTHES_COLOR = Color.GOLDENROD;
     public boolean drinkPotion;
     public float potionTimer;
     public boolean disguise;
@@ -80,6 +74,11 @@ public class Player {
     public boolean useEnergy;
     public float energy;
     public boolean recoverE;
+
+    //sleeping
+    public boolean asleep;
+    public float sleepTimer;
+    private float moveTimer;
 
     public Player (Vector2 position, Vector2 viewportPosition, Level level) {
         //initialize parameters
@@ -124,6 +123,9 @@ public class Player {
         drinkPotion = false;
         potionTimer = 40;
         disguise = false;
+        asleep = false;
+        sleepTimer = 0;
+        moveTimer = 0;
     }
 
     public void update (float delta) {
@@ -147,12 +149,11 @@ public class Player {
         }
 
         //move player's eyes and mouth
-        //TODO: make player's facial features and body move according to delta
-        lookAround(delta, 5);
+        lookAround(delta);
         if (spawnTimer >= 110) {
             //move player when player touches screen
             if (!viewportPosition.equals(new Vector2()) && (insideCatacomb() || outsideCatacombLeft() || outsideCatacombRight()) && (jumpState != Enums.JumpState.GROUNDED || viewportPosition.y > level.inventory.position.y)) {
-                movePlayer(delta, 60);
+                movePlayer(delta);
             } else {
                 resetLegs();
             }
@@ -197,58 +198,73 @@ public class Player {
                 }
             }
             //unlock high walls
-            //if heldItem is a key, a Locked door becomes Unlocked and a DoubleLocked door becomes Locked. Also, an Unlocked door can become Locked. If heldItem is a doubleKey, then a DoubleLocked door can become Unlocked.
-            //middleRight
-            if (position.x >= currentCatacomb.position.x + currentCatacomb.width - 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(3).equals("Closed")) {
-                //with normal key
-                if (currentCatacomb.getLockedDoors().get(3).equals("Locked") && heldItem.itemType.equals("key")) {
-                    currentCatacomb.getLockedDoors().set(3, "Unlocked");
-                    level.gameplayScreen.sound6.play();
-                } else if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
-                    currentCatacomb.getLockedDoors().set(3, "Locked");
-                    level.gameplayScreen.sound6.play();
-                }
-                //with doubleKey
-                if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
-                    currentCatacomb.getLockedDoors().set(3, "Unlocked");
-                    level.gameplayScreen.sound6.play();
-                }
-                //take away key after it is used
-                level.inventory.deleteCurrentItem();
-                //lock doors
-            } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(3).equals("Unlocked")) {
-                currentCatacomb.getLockedDoors().set(3, "Locked");
-                level.gameplayScreen.sound6.play();
-                level.inventory.deleteCurrentItem();
+            unlockHighWalls();
+            //increase move timer when player is not moving
+            if (!moving && !level.show && !danger && !useEnergy && !drinkPotion && !fighting && !alert && !level.inventory.paused && !level.victory && !level.defeat) {
+                moveTimer++;
+            } else {
+                moveTimer = 0;
+                asleep = false;
             }
-            //middleLeft
-            if (position.x <= currentCatacomb.position.x + 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(1).equals("Closed")) {
-                //with normal key
-                if (currentCatacomb.getLockedDoors().get(1).equals("Locked") && heldItem.itemType.equals("key")) {
-                    currentCatacomb.getLockedDoors().set(1, "Unlocked");
-                    level.gameplayScreen.sound6.play();
-                } else if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
-                    currentCatacomb.getLockedDoors().set(1, "Locked");
-                    level.gameplayScreen.sound6.play();
-                }
-                //with doubleKey
-                if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
-                    currentCatacomb.getLockedDoors().set(1, "Unlocked");
-                    level.gameplayScreen.sound6.play();
-                }
-                //take away key after it is used
-                level.inventory.deleteCurrentItem();
-                //lock doors
-            } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(1).equals("Unlocked")) {
-                currentCatacomb.getLockedDoors().set(1, "Locked");
-                level.gameplayScreen.sound6.play();
-                level.inventory.deleteCurrentItem();
+            //make player fall asleep if it hasn't moved for a while
+            if (moveTimer > 500) {
+                asleep = true;
             }
         }
         //find nearest catacomb's doors and set them to currentCatacomb doors
         setNearCatacombDoors();
     }
 
+    private void unlockHighWalls () {
+        //if heldItem is a key, a Locked door becomes Unlocked and a DoubleLocked door becomes Locked. Also, an Unlocked door can become Locked. If heldItem is a doubleKey, then a DoubleLocked door can become Unlocked.
+        //middleRight
+        Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
+        if (position.x >= currentCatacomb.position.x + currentCatacomb.width - 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(3).equals("Closed")) {
+            //with normal key
+            if (currentCatacomb.getLockedDoors().get(3).equals("Locked") && heldItem.itemType.equals("key")) {
+                currentCatacomb.getLockedDoors().set(3, "Unlocked");
+                level.gameplayScreen.sound6.play();
+            } else if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
+                currentCatacomb.getLockedDoors().set(3, "Locked");
+                level.gameplayScreen.sound6.play();
+            }
+            //with doubleKey
+            if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                currentCatacomb.getLockedDoors().set(3, "Unlocked");
+                level.gameplayScreen.sound6.play();
+            }
+            //take away key after it is used
+            level.inventory.deleteCurrentItem();
+            //lock doors
+        } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(3).equals("Unlocked")) {
+            currentCatacomb.getLockedDoors().set(3, "Locked");
+            level.gameplayScreen.sound6.play();
+            level.inventory.deleteCurrentItem();
+        }
+        //middleLeft
+        if (position.x <= currentCatacomb.position.x + 55 && (heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey") && currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked"))) && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && !currentCatacomb.getLockedDoors().get(1).equals("Closed")) {
+            //with normal key
+            if (currentCatacomb.getLockedDoors().get(1).equals("Locked") && heldItem.itemType.equals("key")) {
+                currentCatacomb.getLockedDoors().set(1, "Unlocked");
+                level.gameplayScreen.sound6.play();
+            } else if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
+                currentCatacomb.getLockedDoors().set(1, "Locked");
+                level.gameplayScreen.sound6.play();
+            }
+            //with doubleKey
+            if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
+                currentCatacomb.getLockedDoors().set(1, "Unlocked");
+                level.gameplayScreen.sound6.play();
+            }
+            //take away key after it is used
+            level.inventory.deleteCurrentItem();
+            //lock doors
+        } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(1).equals("Unlocked")) {
+            currentCatacomb.getLockedDoors().set(1, "Locked");
+            level.gameplayScreen.sound6.play();
+            level.inventory.deleteCurrentItem();
+        }
+    }
     //find catacomb nearest to player and assign player to it
     private void findNearestCatacomb () {
         for (Catacomb catacomb : level.catacombs) {
@@ -296,7 +312,7 @@ public class Player {
         }
     }
 
-    public void holdItem (String itemType) {
+    void holdItem (String itemType) {
         //set initials
         heldItem.collected = true;
         heldItem.itemType = itemType;
@@ -333,13 +349,6 @@ public class Player {
         if (level.inventory.selectedItem != -1 && (heldItem.itemType.equals("invisibility") || heldItem.itemType.equals("ghost") || heldItem.itemType.equals("shock"))) {
             heldItem.potion.full = level.inventory.inventoryItems.get(level.inventory.selectedItem).potion.full;
         }
-        //reset touchPosition
-        /*if (level.touchPosition.dst(new Vector2(heldItem.itemType.equals("dagger") ? (position.x - (Constants.PLAYER_WIDTH * 1.0f) - heldItem.itemWidth + (velocity.x / 40)) : (position.x - (Constants.PLAYER_WIDTH * 1.2f) - heldItem.itemWidth + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)))) < 8 && facing == Enums.Facing.RIGHT) {
-            level.touchPosition.set(new Vector2());
-        }
-        if (level.touchPosition.dst(new Vector2(heldItem.itemType.equals("dagger") ? (position.x + (Constants.PLAYER_WIDTH * 0.8f) + (velocity.x / 40)) : (position.x + (Constants.PLAYER_WIDTH * 1.2f) + (velocity.x / 40)), heldItem.itemType.equals("dagger") ? (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)) + 1 : (position.y - (Constants.PLAYER_HEIGHT / 1.05f) + (velocity.y / 60)))) < 8 && facing == Enums.Facing.LEFT) {
-            level.touchPosition.set(new Vector2());
-        }*/
     }
 
     //when player spawns, its opacity flashes a few times
@@ -389,9 +398,8 @@ public class Player {
     private boolean insideCatacomb () {
         Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
         //check if position.x is more than catacomb's left side
-        boolean inside = position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55;
         //return results to determine if player is within catacomb's bounds
-        return inside;
+        return (position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55);
     }
 
     private boolean outsideCatacombLeft () {
@@ -498,7 +506,8 @@ public class Player {
         return outsideWidth;
     }
 
-    private void movePlayer (float delta, float moveSpeed) {
+    private void movePlayer (float delta) {
+        float moveSpeed = 60;
         //move player if player is not where you touched
         if (!(position.x < viewportPosition.x + 1) || !((position.x < level.catacombs.get(level.currentCatacomb).position.x + 55 || position.x > (level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width) - 65) ? (position.x > viewportPosition.x) : (position.x > viewportPosition.x - 1))) {
             //go left
@@ -547,8 +556,9 @@ public class Player {
         moving = true;
     }
 
-    private void lookAround (float delta, float moveSpeed) {
+    private void lookAround (float delta) {
 
+        float moveSpeed = 5;
         //set mouth moving speed
         float mouthSpeed = (moveSpeed / 2);
 
@@ -581,9 +591,9 @@ public class Player {
         }
     }
 
-    private void talk (ShapeRenderer renderer, float talkSpeed, Vector2 duckOffset) {
+    private void talk (ShapeRenderer renderer, Vector2 duckOffset) {
         //speed
-        mouthFrameTimer += talkSpeed;
+        mouthFrameTimer += Constants.MOUTH_TALKING_SPEED;
 
         //talk frames to make mouth move
         if (mouthFrameTimer >= 0 && mouthFrameTimer < 50) {
@@ -729,8 +739,14 @@ public class Player {
             } else {
                 renderer.setColor(new Color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, spawnOpacity));
             }
-            renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
-            renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
+            //draw the eyes as circles when awake but as slits when asleep
+            if (!asleep) {
+                renderer.circle(eyeLookLeft.x + position.x, eyeLookLeft.y + position.y, Constants.HEAD_SIZE / 10, 4);
+                renderer.circle(eyeLookRight.x + position.x, eyeLookRight.y + position.y, Constants.HEAD_SIZE / 10, 4);
+            } else {
+                renderer.rectLine((eyeLookLeft.x + position.x) - (Constants.HEAD_SIZE / 10), eyeLookLeft.y + position.y, (eyeLookLeft.x + position.x) + (Constants.HEAD_SIZE / 10), eyeLookLeft.y + position.y, 0.5f);
+                renderer.rectLine((eyeLookRight.x + position.x) - (Constants.HEAD_SIZE / 10), eyeLookRight.y + position.y, (eyeLookRight.x + position.x) + (Constants.HEAD_SIZE / 10), eyeLookRight.y + position.y, 0.5f);
+            }
             //mouth
             renderer.setColor(new Color(Color.BROWN.r, Color.BROWN.g, Color.BROWN.b, spawnOpacity));
             //mouth states
@@ -739,7 +755,7 @@ public class Player {
             } else if (mouthState == Enums.MouthState.OPEN) {
                 renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
             } else if (mouthState == Enums.MouthState.TALKING) {
-                talk(renderer, Constants.MOUTH_TALKING_SPEED, new Vector2());
+                talk(renderer, new Vector2());
             }
             //when player drinks a potion, display potion bar
             if (drinkPotion) {
@@ -788,6 +804,24 @@ public class Player {
                 renderer.rectLine(position.x - 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, (position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
                 renderer.setColor(Color.PURPLE);
                 renderer.rectLine((position.x - 10) + energy, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, position.x + 10, (position.y + Constants.HEAD_SIZE * 1.5f) + energyY, 4);
+            }
+
+            //draw sleeping "Z"s
+            if (asleep) {
+                //switch between three Zs in different positions
+                sleepTimer ++;
+                if (sleepTimer >= 0 && sleepTimer <= 30) {
+                    sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE), position.y + (Constants.HEAD_SIZE)), Constants.HEAD_SIZE / 2f, renderer);
+                } else if (sleepTimer > 30 && sleepTimer <= 60) {
+                    sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE * 1.5f), position.y + (Constants.HEAD_SIZE * 1.5f)), Constants.HEAD_SIZE / 3f, renderer);
+                } else if (sleepTimer > 60 && sleepTimer <= 90) {
+                    sleepZ(new Vector2(position.x + (Constants.HEAD_SIZE * 2f), position.y + (Constants.HEAD_SIZE * 2f)), Constants.HEAD_SIZE / 4f, renderer);
+                } else if (sleepTimer > 90) {
+                    sleepTimer = 0;
+                }
+            } else {
+                //reset sleepTimer
+                sleepTimer = 0;
             }
 
             if (level.superior.currentLevel != 14) {
@@ -869,7 +903,7 @@ public class Player {
             } else if (mouthState == Enums.MouthState.OPEN) {
                 renderer.circle(position.x + mouthOffset.x, (position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y) + duckOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
             } else if (mouthState == Enums.MouthState.TALKING) {
-                talk(renderer, Constants.MOUTH_TALKING_SPEED, duckOffset);
+                talk(renderer, duckOffset);
             }
             //health bar
             if (danger) {
@@ -925,11 +959,7 @@ public class Player {
                     } else {
                         //reload energy every 10 shots during boss battle
                         energy += ((level.getPlayer().heldItem.stungun.lasersShot % 10 == 0) ? 0.2f : 1f);
-                        if (level.getPlayer().heldItem.stungun.lasersShot % 10 == 0 && energy < 19) {
-                            level.getPlayer().heldItem.stungun.reloading = true;
-                        } else {
-                            level.getPlayer().heldItem.stungun.reloading = false;
-                        }
+                        level.getPlayer().heldItem.stungun.reloading = (level.getPlayer().heldItem.stungun.lasersShot % 10 == 0 && energy < 19);
                     }
                 } else {
                     energy += 0.2f;
@@ -945,7 +975,15 @@ public class Player {
         }
     }
 
-
+    //draw Zs for sleeping animation
+    private void sleepZ (Vector2 zPosition, float size, ShapeRenderer renderer) {
+        //bottom line
+        renderer.rectLine(zPosition.x, zPosition.y, zPosition.x + size, zPosition.y, size / 5);
+        //top line
+        renderer.rectLine(zPosition.x, zPosition.y + size, zPosition.x + size, zPosition.y + size, size / 5);
+        //middle slanted line
+        renderer.rectLine(zPosition.x, zPosition.y, zPosition.x + size, zPosition.y + size, size / 5);
+    }
 
     //return player position if needed
     public Vector2 getPosition () {

@@ -1,15 +1,10 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.DelayedRemovalArray;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
@@ -20,6 +15,7 @@ import com.efe.gamedev.catacombs.util.Constants;
  */
 
 public class levelVerdict {
+
     public boolean verdict;
     public String verdictPhrase;
     private Level level;
@@ -41,7 +37,7 @@ public class levelVerdict {
         rotateIn = 0;
         timer = 0;
         resetButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Reset", 30, 30, Color.RED,
-                new Runnable () {public void run() {
+                () -> {
                     //save progress
                     if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
                         level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
@@ -49,21 +45,21 @@ public class levelVerdict {
                     //save progress
                     level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
                     level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0;
-                }},
+                },
                 level);
         homeButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Home", 30, 30, Color.RED,
-                new Runnable () {public void run() {
+                () -> {
                     //save progress
                     if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
                         level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
                     }
                     //save progress
                     level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
-                    level.gameplayScreen.showMenuScreen(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
-                }},
+                    level.gameplayScreen.showMenuScreen();
+                },
                 level);
         playButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Play", 50, 30, Color.RED,
-                new Runnable () {public void run() {
+                () -> {
                     //save progress
                     if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
                         level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
@@ -78,9 +74,9 @@ public class levelVerdict {
                         level.getPlayer().spawnTimer = 0;
                     } else {
                         //if last level, go back to menu screen
-                        level.gameplayScreen.showMenuScreen(level.superior.furthestLevel);
+                        level.gameplayScreen.showMenuScreen();
                     }
-                }},
+                },
                 level);
     }
 

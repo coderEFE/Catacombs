@@ -2,9 +2,7 @@ package com.efe.gamedev.catacombs.entities;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.efe.gamedev.catacombs.Level;
 
 /**
  * Created by coder on 5/29/2018.
@@ -18,9 +16,9 @@ public class Stalactite {
     private Vector2 acceleration;
     private Vector2 velocity;
     public boolean hit;
-    public float fadeTimer;
+    float fadeTimer;
 
-    public Stalactite (Vector2 position, float size) {
+    Stalactite (Vector2 position, float size) {
         this.position = position;
         this.size = size;
         acceleration = new Vector2(0, -100.0f);

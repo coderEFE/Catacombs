@@ -1,7 +1,6 @@
 package com.efe.gamedev.catacombs;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -16,14 +15,13 @@ import com.efe.gamedev.catacombs.entities.Word;
 import com.efe.gamedev.catacombs.util.ChaseCam;
 import com.efe.gamedev.catacombs.util.Constants;
 
-
 /**
  * Created by coder on 11/13/2017.
+ * This is the main game-play screen that cares of all the levels, most of the music, and HUD elements.
  */
 
 public class GameplayScreen extends ScreenAdapter {
 
-    private static final String TAG = GameplayScreen.class.getName();
     //Game
     public CatacombsGame game;
     //HUD
@@ -31,7 +29,7 @@ public class GameplayScreen extends ScreenAdapter {
     //Level
     private Levels levels;
     private Level level;
-    private int levelNumber = 0;
+    private int levelNumber;
     //ShapeRenderer
     private ShapeRenderer renderer;
     //text setup
@@ -71,7 +69,7 @@ public class GameplayScreen extends ScreenAdapter {
     public Sound sound9;
 
     //set current level number
-    public GameplayScreen(CatacombsGame game, int levelNum) {
+    GameplayScreen(CatacombsGame game, int levelNum) {
         this.game = game;
         levelNumber = levelNum;
     }
@@ -110,6 +108,7 @@ public class GameplayScreen extends ScreenAdapter {
         sound1 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_menu_05_a.wav"));
         sound2 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_menu_a.wav"));
         sound3 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_coin.wav"));
+        sound3.setVolume(sound3.play(), 0.5f);
         sound4 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_prompt.wav"));
         sound5 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_confirm_02.wav"));
         sound6 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_click_switch.wav"));
@@ -175,12 +174,10 @@ public class GameplayScreen extends ScreenAdapter {
             music_black_vortex.play();
             play_black_vortex = false;
         }
-        music_black_vortex.setOnCompletionListener(new Music.OnCompletionListener() {
-            @Override
-            public void onCompletion(Music music) {
-                play_enter_the_maze = true;
-                Constants.CURRENT_SONG = "enter_the_maze";
-            }
+        //moves to next song when finished
+        music_black_vortex.setOnCompletionListener(music -> {
+            play_enter_the_maze = true;
+            Constants.CURRENT_SONG = "enter_the_maze";
         }
         );
         //second song
@@ -188,12 +185,9 @@ public class GameplayScreen extends ScreenAdapter {
             music_enter_the_maze.play();
             play_enter_the_maze = false;
         }
-        music_enter_the_maze.setOnCompletionListener(new Music.OnCompletionListener() {
-            @Override
-            public void onCompletion(Music music) {
-                play_cave = true;
-                Constants.CURRENT_SONG = "cave";
-            }
+        music_enter_the_maze.setOnCompletionListener(music -> {
+            play_cave = true;
+            Constants.CURRENT_SONG = "cave";
         }
         );
         //third song
@@ -201,12 +195,9 @@ public class GameplayScreen extends ScreenAdapter {
             music_cave.play();
             play_cave = false;
         }
-        music_cave.setOnCompletionListener(new Music.OnCompletionListener() {
-            @Override
-            public void onCompletion(Music music) {
-                play_black_vortex = true;
-                Constants.CURRENT_SONG = "black_vortex";
-            }
+        music_cave.setOnCompletionListener(music -> {
+            play_black_vortex = true;
+            Constants.CURRENT_SONG = "black_vortex";
         }
         );
         //make songs quieter when paused
@@ -261,14 +252,13 @@ public class GameplayScreen extends ScreenAdapter {
         batch.end();
     }
 
-    public void showMenuScreen(int currentLevel) {
-        //Constants.SONG_POSITION = music_black_vortex.isPlaying() ? music_black_vortex.getPosition() : (music_enter_the_maze.isPlaying() ? music_enter_the_maze.getPosition() : (music_cave.isPlaying() ? music_cave.getPosition() : 0));
+    public void showMenuScreen() {
         //dispose of background music
         music_black_vortex.dispose();
         music_enter_the_maze.dispose();
         music_cave.dispose();
         //set screen
-        game.showMenuScreen(currentLevel);
+        game.showMenuScreen();
     }
 
     @Override

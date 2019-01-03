@@ -8,6 +8,7 @@ import com.efe.gamedev.catacombs.util.Constants;
 /**
  * Created by coder on 6/11/2018.
  * Various types of gems that can be collected
+ * there are sapphires, emeralds, and rubies
  */
 
 public class Gem {
@@ -40,12 +41,16 @@ public class Gem {
         }
         //ACTUAL
         //set transparent gem color depending on gemType
-        if (gemType.equals("sapphire")) {
-            renderer.setColor(Color.BLUE);
-        } else if (gemType.equals("ruby")) {
-            renderer.setColor(Color.RED);
-        } else if (gemType.equals("emerald")) {
-            renderer.setColor(Color.GREEN);
+        switch (gemType) {
+            case "sapphire":
+                renderer.setColor(Color.BLUE);
+                break;
+            case "ruby":
+                renderer.setColor(Color.RED);
+                break;
+            case "emerald":
+                renderer.setColor(Color.GREEN);
+                break;
         }
         //draw gem
         renderer.polygon(new float[]{ position.x, position.y, position.x + (gemWidth / 8f), position.y + (gemWidth / 8f), position.x + gemWidth - (gemWidth / 8f), position.y + (gemWidth / 8f), position.x + gemWidth, position.y, position.x + (gemWidth / 2), position.y - (gemWidth * 0.8f)});

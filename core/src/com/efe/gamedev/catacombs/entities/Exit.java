@@ -8,6 +8,8 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 12/6/2017.
+ * This is the exit door which the player attempts to travel to in each level
+ * It needs to be unlocked by the exit pad before being used
  */
 
 public class Exit {
@@ -18,7 +20,7 @@ public class Exit {
     private Level level;
     public boolean unlocked;
     public boolean playerHasEscaped;
-    public Color padColor;
+    private Color padColor;
     private float doorFade;
     public boolean show;
 

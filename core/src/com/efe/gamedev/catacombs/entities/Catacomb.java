@@ -6,14 +6,13 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
-
 /**
  * Created by coder on 11/17/2017.
+ * This is the Catacomb class, which make up most of the level environments and can be long or skinny widths
  */
 
 public class Catacomb {
@@ -27,19 +26,19 @@ public class Catacomb {
     private Vector2 shadowOffset;
 
     //left side
-    Vector2 topLeft;
+    private Vector2 topLeft;
     Vector2 middleLeft;
-    public Vector2 bottomLeft;
+    Vector2 bottomLeft;
     //right side
-    Vector2 topRight;
+    private Vector2 topRight;
     Vector2 middleRight;
     Vector2 bottomRight;
 
     public Vector2 bottomLeftOffset;
-    public Vector2 middleLeftOffset;
-    Vector2 topLeftOffset;
-    public Vector2 bottomRightOffset;
-    public Vector2 middleRightOffset;
+    Vector2 middleLeftOffset;
+    private Vector2 topLeftOffset;
+    Vector2 bottomRightOffset;
+    Vector2 middleRightOffset;
     public Vector2 bottomsOffset;
 
     //drop stalactites
@@ -52,7 +51,7 @@ public class Catacomb {
 
     public Catacomb (Vector2 position, String Door1, String Door2, String Door3, String Door4, String Door5, String Door6, Level level) {
         this.position = position;
-        lockedDoors = new Array<String>();
+        lockedDoors = new Array<>();
         lockedDoors.add(Door1);
         lockedDoors.add(Door2);
         lockedDoors.add(Door3);
@@ -78,7 +77,7 @@ public class Catacomb {
         shadowOffset = new Vector2(1.5f, 2);
         stalactites = false;
         drop = false;
-        catacombStalactites = new Array<Stalactite>();
+        catacombStalactites = new Array<>();
         floorSpikes = false;
         this.level = level;
         fadeRed = 0;
@@ -277,7 +276,7 @@ public class Catacomb {
         if (stalactites) {
             //((catacombStalactites.get(catacombStalactites.size - 1)).size/2)
             if (!drop) {
-                catacombStalactites = new Array<Stalactite>();
+                catacombStalactites = new Array<>();
                 for (int i = 0; i < (width - 100); i += 10) {
                     //draw stalactites
                     renderer.setColor(Color.DARK_GRAY);
@@ -318,49 +317,66 @@ public class Catacomb {
     public void renderButton (ShapeRenderer renderer) {
         //buttons for toggling locked and unlocked
         renderer.set(ShapeRenderer.ShapeType.Filled);
+        //Forest color means unlocked, Maroon color means locked, and Purple color means double-locked
         //bottomLeft
-        if (lockedDoors.get(0).equals("Unlocked")) {
-            renderer.setColor(Color.FOREST);
-            renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(0).equals("Locked")) {
-            renderer.setColor(Color.MAROON);
-            renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(0).equals("DoubleLocked")) {
-            renderer.setColor(Color.PURPLE);
-            renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
+        switch (lockedDoors.get(0)) {
+            case "Unlocked":
+                renderer.setColor(Color.FOREST);
+                renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "Locked":
+                renderer.setColor(Color.MAROON);
+                renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "DoubleLocked":
+                renderer.setColor(Color.PURPLE);
+                renderer.circle(bottomLeft.x + bottomLeftOffset.x - 5.5f, bottomLeft.y + bottomLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
         }
         //bottomRight
-        if (lockedDoors.get(4).equals("Unlocked")) {
-            renderer.setColor(Color.FOREST);
-            renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(4).equals("Locked")) {
-            renderer.setColor(Color.MAROON);
-            renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(4).equals("DoubleLocked")) {
-            renderer.setColor(Color.PURPLE);
-            renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
+        switch (lockedDoors.get(4)) {
+            case "Unlocked":
+                renderer.setColor(Color.FOREST);
+                renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "Locked":
+                renderer.setColor(Color.MAROON);
+                renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "DoubleLocked":
+                renderer.setColor(Color.PURPLE);
+                renderer.circle(bottomRight.x + bottomRightOffset.x + 5.5f, bottomRight.y + bottomRightOffset.y + 10, wallThickness / 2, 10);
+                break;
         }
         //middleLeft
-        if (lockedDoors.get(1).equals("Unlocked")) {
-            renderer.setColor(Color.FOREST);
-            renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(1).equals("Locked")) {
-            renderer.setColor(Color.MAROON);
-            renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(1).equals("DoubleLocked")) {
-            renderer.setColor(Color.PURPLE);
-            renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
+        switch (lockedDoors.get(1)) {
+            case "Unlocked":
+                renderer.setColor(Color.FOREST);
+                renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "Locked":
+                renderer.setColor(Color.MAROON);
+                renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "DoubleLocked":
+                renderer.setColor(Color.PURPLE);
+                renderer.circle(middleLeft.x + middleLeftOffset.x + 5.5f, middleLeft.y + middleLeftOffset.y + 10, wallThickness / 2, 10);
+                break;
         }
         //middleRight
-        if (lockedDoors.get(3).equals("Unlocked")) {
-            renderer.setColor(Color.FOREST);
-            renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(3).equals("Locked")) {
-            renderer.setColor(Color.MAROON);
-            renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
-        } else if (lockedDoors.get(3).equals("DoubleLocked")) {
-            renderer.setColor(Color.PURPLE);
-            renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
+        switch (lockedDoors.get(3)) {
+            case "Unlocked":
+                renderer.setColor(Color.FOREST);
+                renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "Locked":
+                renderer.setColor(Color.MAROON);
+                renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
+                break;
+            case "DoubleLocked":
+                renderer.setColor(Color.PURPLE);
+                renderer.circle(middleRight.x + middleRightOffset.x - 5.5f, middleRight.y + middleRightOffset.y + 10, wallThickness / 2, 10);
+                break;
         }
     }
 

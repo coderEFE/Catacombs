@@ -122,6 +122,8 @@ public class Levels {
         configuredLevel.getPlayer().heldItem.itemType = "";
         configuredLevel.getPlayer().drinkPotion = false;
         configuredLevel.getPlayer().disguise = false;
+        configuredLevel.getPlayer().asleep = false;
+        configuredLevel.getPlayer().sleepTimer = 0;
 
         switch (currentLevel) {
             case 0:
@@ -990,6 +992,7 @@ public class Levels {
                         () -> {},
                         () -> {},
                         () -> {
+                                configuredLevel.touchLocked = false;
                                 configuredLevel.show = false;
                                 configuredLevel.continueBubbles = false;
                                 if (configuredLevel.catacombs.get(2).getLockedDoors().get(3).equals("Unlocked")) {
@@ -3589,6 +3592,7 @@ public class Levels {
                         () -> {
                                 configuredLevel.continueBubbles = false;
                                 configuredLevel.guards.get(3).guardItem = "dagger";
+                                configuredLevel.getPlayer().facing = Enums.Facing.RIGHT;
                                 if (configuredLevel.guards.get(3).position.x >= configuredLevel.getPlayer().getPosition().x - 30 && configuredLevel.guards.get(3).position.x <= configuredLevel.getPlayer().getPosition().x + 30) {
                                     configuredLevel.guards.get(3).guardState = Enums.GuardState.FIGHT;
                                     configuredLevel.getPlayer().fighting = true;
@@ -5158,7 +5162,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(44).triggered = (configuredLevel.exitDoor.unlocked);
             configuredLevel.speechBubbles.get(48).triggered = (configuredLevel.currentBubble == 48);
         }
-        if (currentLevel == 1) {
+        else if (currentLevel == 1) {
             configuredLevel.speechBubbles.get(13).triggered = (configuredLevel.getPlayer().getPosition().x <= 260);
             configuredLevel.speechBubbles.get(17).triggered = (configuredLevel.currentCatacomb == 1);
             configuredLevel.speechBubbles.get(20).triggered = (configuredLevel.currentCatacomb == 2);
@@ -5171,7 +5175,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(36).triggered = (configuredLevel.currentBubble == 36);
             configuredLevel.speechBubbles.get(37).triggered = (configuredLevel.currentBubble == 37);
         }
-        if (currentLevel == 2) {
+        else if (currentLevel == 2) {
             configuredLevel.speechBubbles.get(1).triggered = (configuredLevel.exitDoor.playerHasEscaped);
             configuredLevel.speechBubbles.get(2).triggered = (configuredLevel.currentCatacomb == 4);
             configuredLevel.speechBubbles.get(3).triggered = ((configuredLevel.speechBubbles.get(3).textLoaded && configuredLevel.catacombs.get(4).getLockedDoors().get(0).equals("Unlocked")) || configuredLevel.catacombs.get(4).getLockedDoors().get(0).equals("Unlocked"));
@@ -5186,13 +5190,13 @@ public class Levels {
             configuredLevel.speechBubbles.get(18).triggered = (configuredLevel.currentCatacomb == 4 && configuredLevel.currentBubble == 18);
             configuredLevel.speechBubbles.get(20).triggered = (configuredLevel.currentCatacomb == 7);
         }
-        if (currentLevel == 3) {
+        else if (currentLevel == 3) {
             configuredLevel.speechBubbles.get(0).triggered = (configuredLevel.getPlayer().spawnTimer > 110);
             configuredLevel.speechBubbles.get(3).triggered = (configuredLevel.currentBubble == 3);
             configuredLevel.speechBubbles.get(4).triggered = (configuredLevel.currentBubble == 4);
             if (configuredLevel.currentCatacomb == 6 && configuredLevel.catacombs.get(6).getLockedDoors().get(0).equals("Unlocked")) { configuredLevel.catacombs.get(6).getLockedDoors().set(0, "Locked"); }
         }
-        if (currentLevel == 4) {
+        else if (currentLevel == 4) {
             if (configuredLevel.currentCatacomb == 1 && configuredLevel.currentBubble == 0 && configuredLevel.catacombs.get(1).getLockedDoors().get(0).equals("Unlocked")) {
                 configuredLevel.catacombs.get(1).getLockedDoors().set(0, "Closed");
                 if (configuredLevel.catacombs.get(1).bottomLeftOffset.y < 1) {
@@ -5239,7 +5243,7 @@ public class Levels {
             }
             configuredLevel.speechBubbles.get(81).triggered = (configuredLevel.currentBubble == 81);
         }
-        if (currentLevel == 5) {
+        else if (currentLevel == 5) {
             configuredLevel.catacombs.get(1).longCatacomb = true;
             configuredLevel.catacombs.get(5).longCatacomb = true;
             configuredLevel.catacombs.get(7).longCatacomb = true;
@@ -5272,7 +5276,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(39).triggered = (configuredLevel.currentBubble == 39);
             configuredLevel.speechBubbles.get(40).triggered = (configuredLevel.currentBubble == 40 && ((configuredLevel.getPlayer().getPosition().x > configuredLevel.guards.get(0).position.x && configuredLevel.currentCatacomb == 5) || configuredLevel.guards.get(0).alert));
         }
-        if (currentLevel == 6) {
+        else if (currentLevel == 6) {
             configuredLevel.catacombs.get(3).longCatacomb = true;
             configuredLevel.catacombs.get(5).longCatacomb = true;
             configuredLevel.catacombs.get(7).longCatacomb = true;
@@ -5280,7 +5284,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(3).triggered = (configuredLevel.puzzles.get(2).solved);
             configuredLevel.speechBubbles.get(5).triggered = (configuredLevel.currentBubble == 5);
         }
-        if (currentLevel == 7) {
+        else if (currentLevel == 7) {
             configuredLevel.catacombs.get(1).longCatacomb = true;
             configuredLevel.catacombs.get(8).longCatacomb = true;
             configuredLevel.catacombs.get(8).stalactites = true;
@@ -5288,7 +5292,8 @@ public class Levels {
             //move guards
             if (configuredLevel.currentBubble < 2) {
                 configuredLevel.guards.get(1).position.set(new Vector2(configuredLevel.catacombs.get(configuredLevel.currentCatacomb).position.x + 600, -619));
-            } else if (configuredLevel.currentBubble >= 2 && configuredLevel.currentBubble < 18) {
+            } else if (configuredLevel.currentBubble < 18) {
+                configuredLevel.guards.get(1).guardState = Enums.GuardState.DEFEATED;
                 configuredLevel.guards.get(1).position.set(new Vector2(configuredLevel.catacombs.get(configuredLevel.currentCatacomb).position.x + 60, -119));
             }
             if (configuredLevel.currentBubble >= 4 && configuredLevel.currentBubble < 10 && configuredLevel.guards.get(0).position.x > configuredLevel.catacombs.get(configuredLevel.currentCatacomb).position.x + 160) {
@@ -5302,7 +5307,7 @@ public class Levels {
                 configuredLevel.guards.get(1).eyeLookRight = new Vector2(Constants.EYE_OFFSET + 2, Constants.EYE_OFFSET);
                 //initialize mouth
                 configuredLevel.guards.get(1).mouthOffset = new Vector2(0.6f, 0f);
-                configuredLevel.guards.get(1).facing = Enums.Facing.RIGHT;
+                configuredLevel.guards.get(1).facing = (Enums.Facing.RIGHT);
             }
             //make Guard 1's eyes and mouth be in the same spot if he is not confused
             if (!configuredLevel.guards.get(0).suspicious) {
@@ -5338,7 +5343,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(25).triggered = (configuredLevel.currentBubble == 25);
             configuredLevel.speechBubbles.get(26).triggered = (configuredLevel.currentBubble == 26);
         }
-        if (currentLevel == 8) {
+        else if (currentLevel == 8) {
             configuredLevel.catacombs.get(0).longCatacomb = true;
             configuredLevel.catacombs.get(4).longCatacomb = true;
             configuredLevel.catacombs.get(6).longCatacomb = true;
@@ -5411,7 +5416,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(55).triggered = (configuredLevel.currentBubble == 55);
             configuredLevel.speechBubbles.get(56).triggered = (configuredLevel.currentBubble == 56);
         }
-        if (currentLevel == 9) {
+        else if (currentLevel == 9) {
             //player hits floor spikes
             if (configuredLevel.catacombs.get(11).touchingFloorSpikes(new Vector2(configuredLevel.getPlayer().getPosition().x, (configuredLevel.getPlayer().getPosition().y - Constants.PLAYER_HEIGHT) - Constants.HEAD_SIZE * 2f))) {
                 configuredLevel.defeat = true;
@@ -5446,7 +5451,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(8).triggered = (configuredLevel.currentBubble == 8);
             configuredLevel.speechBubbles.get(9).triggered = (configuredLevel.currentBubble == 9);
         }
-        if (currentLevel == 10) {
+        else if (currentLevel == 10) {
             //lever puzzle
             if (!configuredLevel.levers.get(0).triggered && configuredLevel.levers.get(1).triggered) {
                 configuredLevel.catacombs.get(1).getLockedDoors().set(3, "Unlocked"); configuredLevel.catacombs.get(2).getLockedDoors().set(0, "Unlocked");
@@ -5507,7 +5512,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(11).triggered = (configuredLevel.currentBubble == 11);
             configuredLevel.speechBubbles.get(12).triggered = (configuredLevel.currentBubble == 12);
         }
-        if (currentLevel == 11) {
+        else if (currentLevel == 11) {
             if (configuredLevel.chests.get(0).opened) {
                 configuredLevel.chests.get(0).fade = true;
             }
@@ -5528,7 +5533,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(2).triggered = (configuredLevel.currentBubble == 2);
             configuredLevel.speechBubbles.get(3).triggered = (configuredLevel.currentBubble == 3);
         }
-        if (currentLevel == 12) {
+        else if (currentLevel == 12) {
             configuredLevel.catacombs.get(4).longCatacomb = true;
             configuredLevel.catacombs.get(5).longCatacomb = true;
             configuredLevel.catacombs.get(9).longCatacomb = true;
@@ -5609,7 +5614,7 @@ public class Levels {
             configuredLevel.speechBubbles.get(62).triggered = (configuredLevel.currentBubble == 62);
             configuredLevel.speechBubbles.get(63).triggered = (configuredLevel.currentBubble == 63);
         }
-        if (currentLevel == 13) {
+        else if (currentLevel == 13) {
             configuredLevel.catacombs.get(1).getLockedDoors().set(0, "Closed");
             configuredLevel.catacombs.get(6).getLockedDoors().set(0, "Closed");
             configuredLevel.catacombs.get(2).longCatacomb = true;
@@ -5768,7 +5773,7 @@ public class Levels {
                 configuredLevel.currentBubble = 5;
             }
         }
-        if (currentLevel == 14) {
+        else if (currentLevel == 14) {
             configuredLevel.catacombs.get(0).longCatacomb = true;
             configuredLevel.catacombs.get(2).longCatacomb = true;
             if (configuredLevel.currentBubble < 7) {

@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
@@ -20,14 +19,12 @@ public class Fire {
     public Enums.Facing fireFacing;
     public Vector2 shadowOffset;
     public boolean shadow;
-    private float flameTimer;
 
     public Fire (Vector2 position) {
         this.position = position;
         fireFacing = Enums.Facing.LEFT;
         shadowOffset = new Vector2(2, 1.5f);
         shadow = true;
-        flameTimer = 0;
     }
 
     public void render (ShapeRenderer renderer) {

@@ -8,6 +8,7 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 1/17/2018.
+ * This is the Shape class, which is used in shape puzzles. A shape can be a circle, triangle, or square, and can be changed by being tapped on.
  */
 
 public class Shape {
@@ -15,10 +16,10 @@ public class Shape {
     private Enums.Shape shapeType;
     private Vector2 shapePosition;
     private float size;
-    public boolean changeable;
-    public boolean solved;
+    boolean changeable;
+    boolean solved;
 
-    public Shape (Vector2 shapePosition, Level level, float size) {
+    Shape (Vector2 shapePosition, Level level, float size) {
         this.shapePosition = shapePosition;
         this.level = level;
         changeable = true;
@@ -58,15 +59,15 @@ public class Shape {
         }
     }
 
-    public Enums.Shape getShapeType () {
+    Enums.Shape getShapeType () {
         return shapeType;
     }
 
-    public void setShapeType (Enums.Shape newShape) {
+    void setShapeType (Enums.Shape newShape) {
         shapeType = newShape;
     }
 
-    public void setShapePosition (Vector2 newShapePosition) {
+    void setShapePosition (Vector2 newShapePosition) {
         shapePosition.set(newShapePosition);
     }
 }

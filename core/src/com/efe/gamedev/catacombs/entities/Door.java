@@ -1,25 +1,22 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
-import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 7/3/2018.
  * This is NOT the Exit Door.
+ * This is a door that takes the player to another door in the level
  */
 
 public class Door {
 
     public Vector2 position;
-    public int exitDoorIndex;
+    private int exitDoorIndex;
     private final Level level;
     //door variables
-    public boolean enteredDoor;
     private float doorWidth;
     private float doorHeight;
     public boolean unlocked;
@@ -27,13 +24,12 @@ public class Door {
     private Button yesButton;
     private Button noButton;
     public boolean show;
-    public boolean usingDoor;
+    private boolean usingDoor;
 
     public Door (Vector2 position, final int exitDoorIndex, final Level level) {
         this.position = position;
         this.exitDoorIndex = exitDoorIndex;
         this.level = level;
-        enteredDoor = false;
         doorWidth = 30;
         doorHeight = 60;
         unlocked = false;
@@ -41,7 +37,7 @@ public class Door {
         show = true;
         usingDoor = false;
         yesButton = new Button(new Vector2((position.x - (doorWidth)) + 10, position.y + doorHeight + 15), "Yes", 20, 20, Color.BROWN,
-                new Runnable () {public void run() {
+                () -> {
                     //remove key from player if door is not unlocked yet
                     if (!unlocked) {
                         level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
@@ -51,12 +47,10 @@ public class Door {
                     }
                     usingDoor = true;
                     level.touchPosition = new Vector2();
-                }},
+                },
                 level);
         noButton = new Button(new Vector2(position.x + (doorWidth), position.y + doorHeight + 15), "No", 20, 20, Color.BROWN,
-                new Runnable () {public void run() {
-                    level.touchPosition = new Vector2();
-                }},
+                () -> level.touchPosition = new Vector2(),
                 level);
     }
 

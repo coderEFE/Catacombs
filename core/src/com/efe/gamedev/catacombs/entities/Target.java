@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.efe.gamedev.catacombs.util.Constants;
 
 /**
  * Created by coder on 1/24/2018.
@@ -77,7 +76,7 @@ public class Target {
             if (!left) {
                 renderer.rect(position.x + targetSlide, position.y, itemWidth * 2, itemWidth * 2);
                 renderer.triangle(position.x + (itemWidth * 2) + targetSlide, position.y - (itemWidth / 2), position.x + (itemWidth * 2) + targetSlide, position.y + (itemWidth * 2) + (itemWidth / 2), position.x + (itemWidth * 3.2f) + targetSlide, position.y + itemWidth);
-            } else if (left) {
+            } else {
                 renderer.rect(position.x - targetSlide, position.y, itemWidth * 2, itemWidth * 2);
                 renderer.triangle(position.x - targetSlide, position.y - (itemWidth / 2), position.x - targetSlide, position.y + (itemWidth * 2) + (itemWidth / 2), (position.x - (itemWidth * 1.2f)) - targetSlide, position.y + itemWidth);
             }

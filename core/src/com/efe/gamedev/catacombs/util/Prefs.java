@@ -5,16 +5,14 @@ import com.badlogic.gdx.Preferences;
 
 /**
  * Created by coder on 11/12/2018.
+ * This class saves progress in game for furthest level, max diamonds, and items collected
  */
 
 public class Prefs {
 
     private Preferences pref;
 
-    public Prefs(){
-    }
-
-    protected Preferences getPref() {
+    private Preferences getPref() {
         if (pref == null) {
             pref = Gdx.app.getPreferences("My Preferences");
         }

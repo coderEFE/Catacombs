@@ -1,14 +1,12 @@
 package com.efe.gamedev.catacombs;
 
-import com.badlogic.gdx.ApplicationAdapter;
+//This is my first published game called "Catacombs". Enjoy!!!
+//Catacombs is created by Ethan F. Erickson
+
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.efe.gamedev.catacombs.util.Prefs;
 
-//Currently under development
+//Catacombs, the video game class
 public class CatacombsGame extends Game {
 
     //preferences
@@ -17,16 +15,16 @@ public class CatacombsGame extends Game {
 	//These are the menu and game-play screens
 	@Override
 	public void create() {
-		showMenuScreen(0);
+		showMenuScreen();
         prefs = new Prefs();
 	}
 
 	//show different screens in game
-	public void showMenuScreen(int currentLevel) {
-		setScreen(new MenuScreen(this, currentLevel));
+	void showMenuScreen() {
+		setScreen(new MenuScreen(this));
 	}
 
-	public void showGamePlayScreen(int levelNum) {
+	void showGamePlayScreen(int levelNum) {
 		setScreen(new GameplayScreen(this, levelNum));
 	}
 
@@ -43,7 +41,7 @@ public class CatacombsGame extends Game {
         }
     }
 
-    //set and return number of dimaonds collected per level
+    //set and return number of diamonds collected per level
     public void setMaxDiamonds(Integer newMaxDiamonds, int level) {
         prefs.setMaxDiamonds(newMaxDiamonds, level);
     }
@@ -61,7 +59,7 @@ public class CatacombsGame extends Game {
         prefs.setItemCollected(setCollected, itemIndex);
     }
 
-    public boolean getItemCollected(int itemIndex){
+    boolean getItemCollected(int itemIndex){
         try {
             return prefs.getLevelCollected(itemIndex);
         } catch (NullPointerException e ) {

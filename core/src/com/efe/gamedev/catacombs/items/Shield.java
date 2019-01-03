@@ -2,9 +2,7 @@ package com.efe.gamedev.catacombs.items;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
@@ -28,7 +26,7 @@ public class Shield {
         shadow = true;
     }
     
-    public void render (ShapeRenderer renderer, Level level) {
+    public void render (ShapeRenderer renderer) {
         //make the different directions for the shield
         //special direction for the front of the shield
         if (shieldFacing == Enums.Facing.LEFT) {

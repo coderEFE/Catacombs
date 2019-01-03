@@ -35,9 +35,9 @@ public class Item {
     public Vector2 viewportPosition;
     public String itemType;
     public float itemWidth;
-    public float itemHeight;
+    float itemHeight;
     public boolean collected;
-    public Enums.Facing itemFacing;
+    Enums.Facing itemFacing;
     public Vector2 shadowOffset;
     public boolean targeted;
     private float itemSlide;
@@ -48,7 +48,7 @@ public class Item {
     private Dagger dagger;
     private Gold gold;
     private Phone phone;
-    //stungun lasers
+    //stun-gun lasers
     public StunGun stungun;
     public DelayedRemovalArray<Laser> lasers;
     //more items
@@ -89,17 +89,17 @@ public class Item {
         disguise = new Disguise(position);
         spear = new Spear(position);
         startTime = TimeUtils.nanoTime();
-        lasers = new DelayedRemovalArray<Laser>();
+        lasers = new DelayedRemovalArray<>();
     }
 
     public void render (ShapeRenderer renderer, Level level) {
-        //stungun lasers
+        //Logic for dealing with stun-gun lasers and collisions
+        //stun-gun lasers
         for (int i = 0; i < lasers.size; i++) {
             //render and update lasers
             lasers.get(i).render(renderer);
             lasers.get(i).update();
         }
-
         //item.lasers
         //make player bounds
         Rectangle playerBounds = new Rectangle(level.getPlayer().getPosition().x - Constants.HEAD_SIZE,
@@ -167,146 +167,165 @@ public class Item {
         }
 
         //if item is key, draw a key
-        if (itemType.equals("key") || itemType.equals("doubleKey")) {
-            //set initials
-            itemWidth = key.keyWidth;
-            itemHeight = 9;
-            //set item direction
-            key.keyFacing = itemFacing;
-            //shadow
-            key.shadow = !collected;
-            key.shadowOffset = shadowOffset;
-            //render key, if key is a doubleKey, then set a variable called doubleKey to true, else if not doubleKey, set to false.
-            key.render(renderer, !itemType.equals("key"));
-        } else if (itemType.equals("diamond")) {
-            //if item is diamond, draw a diamond
-            //set initials
-            itemWidth = diamond.diamondWidth;
-            itemHeight = 8;
-            //shadow
-            diamond.shadowOffset = shadowOffset;
-            //render diamond
-            diamond.render(renderer);
-        } else if (itemType.equals("dagger")) {
-            //if item is dagger, draw a dagger
-            //set initials
-            itemWidth = dagger.daggerWidth;
-            itemHeight = 8;
-            //set item direction
-            dagger.daggerFacing = itemFacing;
-            //shadow
-            dagger.shadow = !collected;
-            dagger.shadowOffset = shadowOffset;
-            //render dagger
-            dagger.render(renderer);
-        } else if (itemType.equals("gold")) {
-            //if item is gold, draw gold bars
-            //set initials
-            itemWidth = gold.goldWidth;
-            itemHeight = 8;
-            //shadow
-            gold.shadow = !collected;
-            gold.shadowOffset = shadowOffset;
-            //render gold
-            gold.render(renderer);
-        } else if (itemType.equals("phone")) {
-            //if item is phone, draw phone
-            //set initials
-            itemWidth = phone.phoneWidth;
-            itemHeight = 8;
-            //shadow
-            phone.shadow = !collected;
-            phone.shadowOffset = shadowOffset;
-            //render gold
-            phone.render(renderer);
-        } else if (itemType.equals("stungun")) {
-            //set initials
-            itemWidth = stungun.gunWidth;
-            itemHeight = 9;
-            //set item direction
-            stungun.gunFacing = itemFacing;
-            //shadow
-            stungun.shadow = !collected;
-            stungun.shadowOffset = shadowOffset;
-            //render StunGun
-            stungun.render(renderer, level, this);
-        } else if (itemType.equals("sapphire") || itemType.equals("ruby") || itemType.equals("emerald")) {
-            //if item is sapphire, draw a sapphire
-            //set initials
-            itemWidth = gem.gemWidth;
-            itemHeight = 8;
-            //shadow
-            gem.shadow = !collected;
-            gem.shadowOffset = shadowOffset;
-            //render sapphire
-            gem.render(renderer, itemType);
-        } else if (itemType.equals("invisibility") || itemType.equals("ghost") || itemType.equals("shock")) {
-            //if item is ruby, draw a ruby
-            //set initials
-            itemWidth = potion.potionWidth;
-            itemHeight = 8;
-            //shadow
-            potion.shadow = !collected;
-            potion.shadowOffset = shadowOffset;
-            //render ruby
-            potion.render(renderer, itemType);
-        } else if (itemType.equals("shield")) {
-            //set initials
-            itemWidth = shield.shieldWidth;
-            itemHeight = 9;
-            //set item direction
-            shield.shieldFacing = itemFacing;
-            //shadow
-            shield.shadow = !collected;
-            shield.shadowOffset = shadowOffset;
-            //render Shield
-            shield.render(renderer, level);
-        } else if (itemType.equals("bomb")) {
-            //set initials
-            itemWidth = bomb.bombWidth;
-            itemHeight = 9;
-            //set item direction
-            bomb.bombFacing = itemFacing;
-            //shadow
-            bomb.shadow = !collected;
-            bomb.shadowOffset = shadowOffset;
-            //render Bomb
-            if (!bomb.triggered && !bomb.exploding && collected) {
-                bomb.position.set(new Vector2(position.x + 2, position.y));
-            }
-            bomb.render(renderer, level, this);
-        } else if (itemType.equals("fire")) {
-            //set initials
-            itemWidth = fire.fireWidth;
-            itemHeight = 9;
-            //set item direction
-            fire.fireFacing = itemFacing;
-            //shadow
-            fire.shadow = !collected;
-            fire.shadowOffset = shadowOffset;
-            //render Fire
-            fire.render(renderer);
-        } else if (itemType.equals("disguise")) {
-            //set initials
-            itemWidth = disguise.clothesWidth;
-            itemHeight = 9;
-            //shadow
-            disguise.shadow = !collected;
-            disguise.shadowOffset = shadowOffset;
-            //render Disguise
-            disguise.render(renderer);
-        } else if (itemType.equals("spear")) {
-            //if item is spear, draw a spear
-            //set initials
-            itemWidth = spear.spearWidth;
-            itemHeight = 8;
-            //set item direction
-            spear.spearFacing = itemFacing;
-            //shadow
-            spear.shadow = !collected;
-            spear.shadowOffset = shadowOffset;
-            //render spear
-            spear.render(renderer);
+        switch (itemType) {
+            case "key":
+            case "doubleKey":
+                //set initials
+                itemWidth = key.keyWidth;
+                itemHeight = 9;
+                //set item direction
+                key.keyFacing = itemFacing;
+                //shadow
+                key.shadow = !collected;
+                key.shadowOffset = shadowOffset;
+                //render key, if key is a doubleKey, then set a variable called doubleKey to true, else if not doubleKey, set to false.
+                key.render(renderer, !itemType.equals("key"));
+                break;
+            case "diamond":
+                //if item is diamond, draw a diamond
+                //set initials
+                itemWidth = diamond.diamondWidth;
+                itemHeight = 8;
+                //shadow
+                diamond.shadowOffset = shadowOffset;
+                //render diamond
+                diamond.render(renderer);
+                break;
+            case "dagger":
+                //if item is dagger, draw a dagger
+                //set initials
+                itemWidth = dagger.daggerWidth;
+                itemHeight = 8;
+                //set item direction
+                dagger.daggerFacing = itemFacing;
+                //shadow
+                dagger.shadow = !collected;
+                dagger.shadowOffset = shadowOffset;
+                //render dagger
+                dagger.render(renderer);
+                break;
+            case "gold":
+                //if item is gold, draw gold bars
+                //set initials
+                itemWidth = gold.goldWidth;
+                itemHeight = 8;
+                //shadow
+                gold.shadow = !collected;
+                gold.shadowOffset = shadowOffset;
+                //render gold
+                gold.render(renderer);
+                break;
+            case "phone":
+                //if item is phone, draw phone
+                //set initials
+                itemWidth = phone.phoneWidth;
+                itemHeight = 8;
+                //shadow
+                phone.shadow = !collected;
+                phone.shadowOffset = shadowOffset;
+                //render gold
+                phone.render(renderer);
+                break;
+            case "stungun":
+                //set initials
+                itemWidth = stungun.gunWidth;
+                itemHeight = 9;
+                //set item direction
+                stungun.gunFacing = itemFacing;
+                //shadow
+                stungun.shadow = !collected;
+                stungun.shadowOffset = shadowOffset;
+                //render StunGun
+                stungun.render(renderer, level, this);
+                break;
+            case "sapphire":
+            case "ruby":
+            case "emerald":
+                //if item is sapphire, draw a sapphire
+                //set initials
+                itemWidth = gem.gemWidth;
+                itemHeight = 8;
+                //shadow
+                gem.shadow = !collected;
+                gem.shadowOffset = shadowOffset;
+                //render sapphire
+                gem.render(renderer, itemType);
+                break;
+            case "invisibility":
+            case "ghost":
+            case "shock":
+                //if item is ruby, draw a ruby
+                //set initials
+                itemWidth = potion.potionWidth;
+                itemHeight = 8;
+                //shadow
+                potion.shadow = !collected;
+                potion.shadowOffset = shadowOffset;
+                //render ruby
+                potion.render(renderer, itemType);
+                break;
+            case "shield":
+                //set initials
+                itemWidth = shield.shieldWidth;
+                itemHeight = 9;
+                //set item direction
+                shield.shieldFacing = itemFacing;
+                //shadow
+                shield.shadow = !collected;
+                shield.shadowOffset = shadowOffset;
+                //render Shield
+                shield.render(renderer);
+                break;
+            case "bomb":
+                //set initials
+                itemWidth = bomb.bombWidth;
+                itemHeight = 9;
+                //set item direction
+                bomb.bombFacing = itemFacing;
+                //shadow
+                bomb.shadow = !collected;
+                bomb.shadowOffset = shadowOffset;
+                //render Bomb
+                if (!bomb.triggered && !bomb.exploding && collected) {
+                    bomb.position.set(new Vector2(position.x + 2, position.y));
+                }
+                bomb.render(renderer, level, this);
+                break;
+            case "fire":
+                //set initials
+                itemWidth = fire.fireWidth;
+                itemHeight = 9;
+                //set item direction
+                fire.fireFacing = itemFacing;
+                //shadow
+                fire.shadow = !collected;
+                fire.shadowOffset = shadowOffset;
+                //render Fire
+                fire.render(renderer);
+                break;
+            case "disguise":
+                //set initials
+                itemWidth = disguise.clothesWidth;
+                itemHeight = 9;
+                //shadow
+                disguise.shadow = !collected;
+                disguise.shadowOffset = shadowOffset;
+                //render Disguise
+                disguise.render(renderer);
+                break;
+            case "spear":
+                //if item is spear, draw a spear
+                //set initials
+                itemWidth = spear.spearWidth;
+                itemHeight = 8;
+                //set item direction
+                spear.spearFacing = itemFacing;
+                //shadow
+                spear.shadow = !collected;
+                spear.shadowOffset = shadowOffset;
+                //render spear
+                spear.render(renderer);
+                break;
         }
             //update item's targetBox
             if (!targeted) {
@@ -316,9 +335,9 @@ public class Item {
                 updateBox();
             }
 
-            //reset stungun lasers
+            //reset stun-gun lasers
             if (!itemType.equals("stungun") && lasers.size == 0) {
-                lasers = new DelayedRemovalArray<Laser>();
+                lasers = new DelayedRemovalArray<>();
             }
 
         //if player is touching within the item's bounds, draw a target box around item.

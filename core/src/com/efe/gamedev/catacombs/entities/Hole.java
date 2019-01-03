@@ -7,15 +7,16 @@ import com.badlogic.gdx.math.Vector2;
 /**
  * Created by coder on 6/12/2018.
  * Hole used for the "whacker" puzzles
+ * Similar to the mini-game: "Whack-A-Mole"
  */
 
 public class Hole {
     private Vector2 position;
-    public boolean hasBall;
-    public boolean ballTouched;
-    public boolean golden;
+    boolean hasBall;
+    boolean ballTouched;
+    boolean golden;
 
-    public Hole (Vector2 position) {
+    Hole (Vector2 position) {
         this.position = position;
         ballTouched = false;
         hasBall = false;
@@ -39,7 +40,7 @@ public class Hole {
             } else {
                 if (ballTouched) {
                     renderer.setColor(Color.FOREST);
-                } else if (!ballTouched) {
+                } else {
                     renderer.setColor(Color.MAROON);
                 }
             }
@@ -48,8 +49,8 @@ public class Hole {
         }
     }
 
-    public boolean touchHole (Vector2 touchposition) {
-        return (touchposition.x > position.x - 8) && (touchposition.x < position.x + 8) && (touchposition.y > position.y - 12) && (touchposition.y < position.y + 2);
+    boolean touchHole (Vector2 touchPosition) {
+        return (touchPosition.x > position.x - 8) && (touchPosition.x < position.x + 8) && (touchPosition.y > position.y - 12) && (touchPosition.y < position.y + 2);
     }
 
 }

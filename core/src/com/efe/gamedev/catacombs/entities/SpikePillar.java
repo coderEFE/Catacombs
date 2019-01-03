@@ -14,14 +14,14 @@ public class SpikePillar {
 
     private Level level;
     public Vector2 position;
-    public boolean strike;
-    public boolean hitGround;
+    boolean strike;
+    boolean hitGround;
     private float spikeSize;
-    public float strikeTimer;
-    public float strikeFall;
-    public int strikeValue;
+    float strikeTimer;
+    float strikeFall;
+    int strikeValue;
 
-    public SpikePillar (Vector2 position, Level level) {
+    SpikePillar (Vector2 position, Level level) {
         this.position = position;
         this.level = level;
         strike = false;
@@ -76,17 +76,11 @@ public class SpikePillar {
         }
     }
 
-    public void renderSpikeWarning (ShapeRenderer renderer) {
+    void renderSpikeWarning (ShapeRenderer renderer) {
         //draw warning sign before pillar falls
         float warningOffset = 80;
         if (strike && strikeTimer <= 70) {
             //outer red triangle
-            /*renderer.setColor(Color.RED);
-            renderer.triangle(position.x + 10, position.y - warningOffset, position.x + 30, position.y - warningOffset, position.x + 20, (position.y + 20) - warningOffset);
-            //inner gray triangle
-            renderer.setColor(Color.GRAY);
-            renderer.triangle(position.x + 13, (position.y - warningOffset) + 1.5f, position.x + 27, (position.y - warningOffset) + 1.5f, position.x + 20, (position.y + 17f) - warningOffset);
-            */
             renderer.setColor(Color.RED);
             renderer.rectLine(position.x + 10, position.y - warningOffset, position.x + 30, position.y - warningOffset, 2);
             renderer.rectLine(position.x + 20, (position.y + 20) - warningOffset, position.x + 30, position.y - warningOffset, 2);

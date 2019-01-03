@@ -10,6 +10,8 @@ import com.efe.gamedev.catacombs.util.Enums;
 /**
  * Created by coder on 11/24/2017.
  * The key that opens Catacomb doors
+ * can be used to open locks and double-locks
+ * There are also Double-Keys that can only open double-locks
  */
 
 public class Key {

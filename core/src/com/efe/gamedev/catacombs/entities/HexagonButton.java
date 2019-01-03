@@ -16,13 +16,13 @@ import com.efe.gamedev.catacombs.util.Constants;
 /**
  * Created by coder on 11/11/2018.
  * Hexagon buttons are in the main menu and are used to select levels
+ * They are different from the regular rectangular button class
  */
 
 public class HexagonButton {
     private Vector2 position;
     private Color color;
     private int levelNum;
-    private int diamondNum;
     public boolean selected;
     public boolean locked;
     public FitViewport viewport;
@@ -46,9 +46,9 @@ public class HexagonButton {
     //sets the amount of diamonds shown on the level button
     public void initializeDiamonds () {
         //reset diamond array
-        scoreDiamonds = new Array<Diamond>();
+        scoreDiamonds = new Array<>();
         //set diamonds to each button
-        diamondNum = (menu.game.getMaxDiamonds(levelNum));
+        int diamondNum = (menu.game.getMaxDiamonds(levelNum));
         //add diamonds to array
         for (int i = 0; i < diamondNum; i++) {
             scoreDiamonds.add(new Diamond(new Vector2()));
@@ -69,8 +69,15 @@ public class HexagonButton {
         }
         //select button by pressing it
         if (touchButton(menu.tapPosition) && touchButton(menu.releasePosition) && !menu.pressDown && !locked && menu.selectedLevel != levelNum) {
-            menu.selectedLevel = levelNum;
+            if (levelNum >= 0) {
+                menu.selectedLevel = levelNum;
+            }
             menu.sound5.play();
+            if (levelNum == -1 && !menu.showCredits) {
+                menu.showCredits = true;
+            } else if (levelNum == -2 && menu.showCredits) {
+                menu.showCredits = false;
+            }
         }
         //draw hexagons
         //outer
@@ -79,6 +86,18 @@ public class HexagonButton {
         //inner
         renderer.setColor(lightColor);
         renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 6f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 6f)) / 2f, viewport.getWorldWidth() / 6f, viewport.getWorldWidth() / 6f, 6);
+        //credit button icon
+        if (levelNum == -1) {
+            //three circles
+            renderer.setColor(darkColor);
+            renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 25f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 25f)) / 2f, viewport.getWorldWidth() / 25f, viewport.getWorldWidth() / 25f, 20);
+            renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 25f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) + (viewport.getWorldWidth() / 25f)) / 2f, viewport.getWorldWidth() / 25f, viewport.getWorldWidth() / 25f, 20);
+            renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 25f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) - ((viewport.getWorldWidth() / 25f))) / 4f, viewport.getWorldWidth() / 25f, viewport.getWorldWidth() / 25f, 20);
+        } else if (levelNum == -2) {
+            //back button icon
+            renderer.setColor(darkColor);
+            renderer.triangle(position.x + (viewport.getWorldWidth() / 20f), position.y + (viewport.getWorldWidth() / 10f), position.x + (viewport.getWorldWidth() / 7f), position.y + (viewport.getWorldWidth() / 20f), position.x + (viewport.getWorldWidth() / 7f), position.y + (viewport.getWorldWidth() / 7f));
+        }
         //draw lock if button is locked
         if (levelNum == 0) {
             locked = false;
@@ -112,7 +131,7 @@ public class HexagonButton {
         font.draw(batch, (levelNum + 1) + "", position.x + (viewport.getWorldWidth() / 11f) + 2, position.y + 2 + (viewport.getWorldWidth() / 11f) + numberLayout.height / 2, 0, Align.center, false);
     }
 
-    public boolean touchButton (Vector2 touchPosition) {
+    private boolean touchButton (Vector2 touchPosition) {
         return (touchPosition.dst(new Vector2(position.x + (viewport.getWorldWidth() / 5f / 2f), position.y + (viewport.getWorldWidth() / 5f / 2f))) < viewport.getWorldWidth() / 12f);
     }
 }

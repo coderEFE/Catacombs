@@ -1,6 +1,5 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -15,13 +14,12 @@ import com.efe.gamedev.catacombs.util.Enums;
 /**
  * Created by coder on 11/16/2017.
  * This is the SpeechBubble from which Characters talk from.
- * It is made up of a rounded speech bubble and several options you can choose if the text is a question
+ * It is made up of a rounded rectangle speech bubble and has several options you can choose if the text is a question
  * It is always located in the top left corner.
  */
 
 public class SpeechBubble {
 
-    private static final String TAG = SpeechBubble.class.getName();
     //get level
     private Level level;
     //get parameter variables
@@ -38,9 +36,9 @@ public class SpeechBubble {
     public float option3Alpha;
     public float option4Alpha;
     //text
-    public int typeTimer;
+    private int typeTimer;
     public int typeSpeed = 3;
-    public String typedUpText;
+    private String typedUpText;
     public boolean textLoaded;
 
     private float viewportOffset;
@@ -242,26 +240,6 @@ public class SpeechBubble {
         //target text
         font.setColor(Color.LIGHT_GRAY);
         font.draw(batch, target, hudViewport.getWorldHeight() / 10, hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-        //skip button text
-        /*if (speechBubbleSkip != -1 && level.lastSeenBubble >= speechBubbleSkip) {
-            font.setColor(Color.DARK_GRAY);
-            //a series of if statements determine the location of the "SKIP" button text.
-            //if the speechBubble has two lines of text in it, change the x position
-            if (text.toLowerCase().contains(("\n").toLowerCase())) {
-                //if the index of the new line is more than or equal to the length of the whole text minus that index, set x position to that index, else, set it to the text length minus that index.
-                if (text.toLowerCase().indexOf(("\n").toLowerCase()) >= ((text.length() - text.toLowerCase().indexOf(("\n").toLowerCase())))) {
-                    //font.draw(batch, "SKIP", ((hudViewport.getWorldHeight() / 1.94f) + ((target.length() - 6) * 8f) + ((text.toLowerCase().indexOf(("\n").toLowerCase())) * 9.5f)) - ((480 - hudViewport.getWorldHeight()) * (text.toLowerCase().indexOf(("\n").toLowerCase()) / 52f)), hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-                    font.draw(batch, "SKIP", ((hudViewport.getWorldHeight() / 1.94f) + ((target.length() - 6) * 8f) + (text.toLowerCase().indexOf(("\n").toLowerCase()) * 10.5f)) - ((480 - hudViewport.getWorldHeight()) * (text.toLowerCase().indexOf(("\n").toLowerCase()) / 45f)), hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-                } else if (text.length() - text.toLowerCase().indexOf(("\n").toLowerCase()) > text.toLowerCase().indexOf(("\n").toLowerCase())) {
-                    //font.draw(batch, "SKIP", ((hudViewport.getWorldHeight() / 1.94f) + ((target.length() - 6) * 8f) + ((text.length() - text.toLowerCase().indexOf(("\n").toLowerCase())) * 10f)) - ((480 - hudViewport.getWorldHeight()) * ((text.length() - text.toLowerCase().indexOf(("\n").toLowerCase())) / 52f)), hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-                    font.draw(batch, "SKIP", ((hudViewport.getWorldHeight() / 1.94f) + ((target.length() - 6) * 8f) + ((text.length() - text.toLowerCase().indexOf(("\n").toLowerCase())) * 9.5f)) - ((480 - hudViewport.getWorldHeight()) * ((text.length() - text.toLowerCase().indexOf(("\n").toLowerCase())) / 55f)), hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-                }
-            } else {
-                //if the speechBubble only has one line of text, draw x position a certain way
-                font.draw(batch, "SKIP", ((hudViewport.getWorldHeight() / 1.94f) + ((target.length() - 6) * 8f) + (text.length() * 10.5f)) - ((480 - hudViewport.getWorldHeight()) * (text.length() / 45f)), hudViewport.getWorldHeight() - (height == 20 ? hudViewport.getWorldHeight() / 11 : hudViewport.getWorldHeight() / 11));
-            }
-            //TODO: maybe have a fast-forward icon instead of the word "SKIP"
-        }*/
     }
 
 }

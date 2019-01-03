@@ -40,7 +40,7 @@ public class Sign {
         renderer.rect((position.x - (width / 2f) + 6), position.y + 35, width * (5f / 8f) - 2, 1.5f);
         renderer.rect((position.x - (width / 2f) + 8 + (width * (5f / 8f) - 2)), position.y + 35, width * (3f / 8f) - 4, 1.5f);
     }
-    //checks is a vector2 is inside sign's bounds
+    //checks if a Vector2 is inside sign's bounds
     public boolean touchesSign (Vector2 objectPosition) {
         return (objectPosition.x > (position.x - (width / 2f) + 4) && objectPosition.x < (position.x - (width / 2f) + 4) + width && objectPosition.y > position.y && objectPosition.y < position.y + 70);
     }

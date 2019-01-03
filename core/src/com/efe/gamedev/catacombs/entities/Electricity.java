@@ -4,30 +4,36 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.efe.gamedev.catacombs.Level;
-import com.efe.gamedev.catacombs.util.Constants;
-import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 8/13/2018.
  * This is a puzzle where you have to complete an electrical circuit to solve the puzzle by sliding metal pieces into place
+ * In levels that have this puzzle in, there are arrays of this class where each class is a single wire
+ * This is one of the most complicated puzzles in the game (and the coolest)
  */
 
 public class Electricity {
 
     private Vector2 startPosition;
-    public Vector2 endPosition;
+    private Vector2 endPosition;
     //if metalWidth = 0, there is no metal piece at the end of that electrical wire
     private float metalWidth;
     private boolean metalOn;
     private boolean metalUp;
     private float metalSlide;
+    //Whether this wire is on or not
     private boolean on;
+    //whether this wire is the first wire to turn on or not
     public boolean first;
+    //the function that is activated when this wire is on
     private Runnable onFunction;
+    //the direction in which the electricity is flowing
     private String firstWireDirection;
+    //this boolean makes sure that the onFunction will only be run once
     private boolean runFunction;
 
     public Electricity (Vector2 startPosition, Vector2 endPosition, float metalWidth, final Runnable onFunction) {
+        //initialize variables
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.metalWidth = metalWidth;
@@ -97,11 +103,13 @@ public class Electricity {
             runFunction = true;
         }
         //if one wire's end is touching another wire's start and the first wire is on, the second wire will also turn on.
+        //Basically, if either the wire on the right or the wire on the left is on, this wire is on
         if (!leftWireOff(level) || !rightWireOff(level)) {
             on = true;
         }
 
         //find first wire position
+        //find what direction the electricity is flowing in from the first wire and set a variable to it
         for (int i = 0; i < level.wires.size; i++) {
             if (level.wires.get(i).endPosition.dst(startPosition) < 7f && level.wires.get(i).first) {
                 firstWireDirection = "LEFT";
@@ -109,12 +117,13 @@ public class Electricity {
                 firstWireDirection = "RIGHT";
             }
         }
+        //make sure that all wires have the same value for the firstWireDirection
         for (int i = 0; i < level.wires.size; i++) {
             if ((level.wires.get(i).endPosition.dst(startPosition) < 7f || level.wires.get(i).startPosition.dst(endPosition) < 7f) && !level.wires.get(i).first && !level.wires.get(i).firstWireDirection.equals("NULL")) {
                 firstWireDirection = level.wires.get(i).firstWireDirection;
             }
         }
-        //turn wires off
+        //turn wires off based on direction of electricity flow
         if (firstWireDirection.equals("LEFT") && leftWireOff(level) && !first) {
             on = false;
         }
@@ -154,7 +163,7 @@ public class Electricity {
         return rightOff;
     }
 
-    private boolean  nearbyWireOn (Level level) {
+    private boolean nearbyWireOn (Level level) {
         boolean nearbyOn = false;
         for (int i = 0; i < level.wires.size; i++) {
             //see if this wire is currently near a wire that is on

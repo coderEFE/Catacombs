@@ -1,10 +1,8 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -30,13 +28,12 @@ public class Word {
         this.letters = letters;
         this.letterPositions = letterPositions;
         collectedString = "";
-        collected = new Array<Boolean>();
+        collected = new Array<>();
         for (int i = 0; i < letters.length; i++) {
             collected.add(false);
         }
         countdown = 0;
         isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT") || collectedString.equals("RUBY") || collectedString.equals("POTION") || collectedString.equals("DOOR"));
-        //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         this.level = level;
         solved = false;
     }
@@ -44,7 +41,6 @@ public class Word {
     public void renderText (SpriteBatch batch, BitmapFont font) {
         //update word standards
         isAWord = (collectedString.equals("KEY") || collectedString.equals("2KEYS") || collectedString.equals("GOLD") || collectedString.equals("EXIT") || collectedString.equals("RUBY") || collectedString.equals("POTION") || collectedString.equals("DOOR"));
-        //notAWord = (!collectedString.equals("KEY") && !collectedString.equals("2KEYS") && !collectedString.equals("GOLD"));
         //draw letters and check if they have been collected
         for (int i = 0; i < letters.length; i++) {
             //if you tap on letter and it is not already collected, it gets added to the word above your head and becomes collected.
@@ -64,7 +60,7 @@ public class Word {
             } else {
                 countdown = 0;
                 collectedString = "";
-                collected = new Array<Boolean>();
+                collected = new Array<>();
                 for (int i = 0; i < letters.length; i++) {
                     collected.add(false);
                 }
@@ -119,7 +115,7 @@ public class Word {
         }
         else {
             font.setColor(Color.WHITE);
-        }// - (collectedString.length() * 3.5f)
+        }
         font.draw(batch, collectedString, ((hudViewport.getWorldWidth() / 2f) - (level.words.indexOf(this, true) * ((collectedString.length() + 5) * 5f))), hudViewport.getWorldHeight() / 1.6f);
     }
 }

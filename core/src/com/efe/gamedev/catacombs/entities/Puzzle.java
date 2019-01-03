@@ -11,8 +11,10 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 1/16/2018.
- * Puzzles for player to solve
+ * Puzzles for player to solve, and run a win function after completed (example: give player a diamond or key)
  * //The "shapes" puzzles are made out of several Shape classes which can change shape when they are pressed. If the puzzle's shapes are the same as the solution's shapes, it will run the solveFunction (give player a key or something) and all shapes will turn golden.
+ * //The "whacker" puzzles are made out of holes from which randomized hexagons pop up. To beat the puzzle, you must tap on the hexagon three times.
+ * //The "fire" puzzles include an empty pedestal which a fire item in the level is meant to be mounted. To beat the puzzle, place the fire item on the pedestal.
  */
 
 public class Puzzle {
@@ -46,7 +48,7 @@ public class Puzzle {
         this.solution = solution;
         solved = false;
         shapes = new Shape[]{new Shape(new Vector2(position.x + 2.5f, position.y + 2.5f), level, 15),new Shape(new Vector2(position.x + 22.5f, position.y + 2.5f), level, 15),new Shape(new Vector2(position.x + 42.5f, position.y + 2.5f), level, 15),new Shape(new Vector2(position.x + 62.5f, position.y + 2.5f), level, 15),new Shape(new Vector2(position.x + 82.5f, position.y + 2.5f), level, 15)};
-        hintShapes = new Array<Shape>();
+        hintShapes = new Array<>();
         //add more holes if difficulty is higher
         if ((Integer.parseInt(type.charAt(type.length()-1)+"")) == 3) {
             holes = new Hole[]{new Hole(new Vector2(position.x, position.y)),new Hole(new Vector2(position.x + 20, position.y)),new Hole(new Vector2(position.x + 40, position.y)),new Hole(new Vector2(position.x, position.y + 30)),new Hole(new Vector2(position.x + 20, position.y + 30)),new Hole(new Vector2(position.x + 40, position.y + 30)),new Hole(new Vector2(position.x, position.y + 60)),new Hole(new Vector2(position.x + 20, position.y + 60)),new Hole(new Vector2(position.x + 40, position.y + 60))};
@@ -95,55 +97,67 @@ public class Puzzle {
             level.gameplayScreen.sound3.play();
         }
         //Shape puzzles
-        if (type.equals("shapes1")) {
-            renderer.setColor(Color.LIGHT_GRAY);
-            renderer.rect(position.x, position.y, 20, 20);
-            shapes[0].render(renderer);
-        } else if (type.equals("shapes2")) {
-            renderer.setColor(Color.LIGHT_GRAY);
-            renderer.rect(position.x, position.y, 40, 20);
-            shapes[0].render(renderer);
-            shapes[1].render(renderer);
-        } else if (type.equals("shapes3")) {
-            renderer.setColor(Color.LIGHT_GRAY);
-            renderer.rect(position.x, position.y, 60, 20);
-            shapes[0].render(renderer);
-            shapes[1].render(renderer);
-            shapes[2].render(renderer);
-        } else if (type.equals("shapes4")) {
-            renderer.setColor(Color.LIGHT_GRAY);
-            renderer.rect(position.x, position.y, 80, 20);
-            shapes[0].render(renderer);
-            shapes[1].render(renderer);
-            shapes[2].render(renderer);
-            shapes[3].render(renderer);
-        } else if (type.equals("shapes5")) {
-            renderer.setColor(Color.LIGHT_GRAY);
-            renderer.rect(position.x, position.y, 100, 20);
-            shapes[0].render(renderer);
-            shapes[1].render(renderer);
-            shapes[2].render(renderer);
-            shapes[3].render(renderer);
-            shapes[4].render(renderer);
-        } else if (type.equals("whacker1") || type.equals("whacker2") || type.equals("whacker3")) {
-            //whacker puzzles
-            //set difficulty: whacker1 = 25, whacker2 = 15, whacker3 = 20, but has 9 different holes.
-            switch (Integer.parseInt(type.charAt(type.length()-1)+"")) {
-                case 1:
-                    difficulty = 25;
-                    break;
-                case 2:
-                    difficulty = 15;
-                    break;
-                case 3:
-                    difficulty = 20;
-                    break;
-            }
-            //render and update holes
-            renderHoles(renderer);
-        } else if (type.equals("fire1") || type.equals("fire2") || type.equals("fire3")) {
-            //render torch
-            renderTorch(renderer);
+        switch (type) {
+            case "shapes1":
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x, position.y, 20, 20);
+                shapes[0].render(renderer);
+                break;
+            case "shapes2":
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x, position.y, 40, 20);
+                shapes[0].render(renderer);
+                shapes[1].render(renderer);
+                break;
+            case "shapes3":
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x, position.y, 60, 20);
+                shapes[0].render(renderer);
+                shapes[1].render(renderer);
+                shapes[2].render(renderer);
+                break;
+            case "shapes4":
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x, position.y, 80, 20);
+                shapes[0].render(renderer);
+                shapes[1].render(renderer);
+                shapes[2].render(renderer);
+                shapes[3].render(renderer);
+                break;
+            case "shapes5":
+                renderer.setColor(Color.LIGHT_GRAY);
+                renderer.rect(position.x, position.y, 100, 20);
+                shapes[0].render(renderer);
+                shapes[1].render(renderer);
+                shapes[2].render(renderer);
+                shapes[3].render(renderer);
+                shapes[4].render(renderer);
+                break;
+            case "whacker1":
+            case "whacker2":
+            case "whacker3":
+                //whacker puzzles
+                //set difficulty: whacker1 = 25, whacker2 = 15, whacker3 = 20, but has 9 different holes.
+                switch (Integer.parseInt(type.charAt(type.length() - 1) + "")) {
+                    case 1:
+                        difficulty = 25;
+                        break;
+                    case 2:
+                        difficulty = 15;
+                        break;
+                    case 3:
+                        difficulty = 20;
+                        break;
+                }
+                //render and update holes
+                renderHoles(renderer);
+                break;
+            case "fire1":
+            case "fire2":
+            case "fire3":
+                //render torch
+                renderTorch(renderer);
+                break;
         }
     }
     //render the hint for shape puzzles, telling which shapes go where
@@ -186,56 +200,56 @@ public class Puzzle {
             holes[MathUtils.random(holes.length - 1)].hasBall = true;
         }
         //set timer for how long a hole can have ball
-        for (int i = 0; i < holes.length; i++) {
+        for (Hole hole : holes) {
             //If a hole has a ball, let it keep the ball for a count of 20 (very short time period), before randomly giving the ball to another hole and restarting the timer.
-            if (holes[i].hasBall && !holes[i].ballTouched) {
+            if (hole.hasBall && !hole.ballTouched) {
                 whackTimer++;
             }
             if (whackTimer > difficulty) {
-                holes[i].hasBall = false;
+                hole.hasBall = false;
                 whackTimer = 0;
             }
             //If you tap on ball when is has not been touched, freeze the puzzle and turn ball green
-            if (holes[i].hasBall && !holes[i].ballTouched && holes[i].touchHole(level.touchPosition) && !level.touchPosition.equals(new Vector2())) {
+            if (hole.hasBall && !hole.ballTouched && hole.touchHole(level.touchPosition) && !level.touchPosition.equals(new Vector2())) {
                 level.touchPosition.set(new Vector2());
-                holes[i].ballTouched = true;
+                hole.ballTouched = true;
                 whackTimer = 1;
             }
             //if ball is touched, set a short timer
-            if (holes[i].ballTouched && successTimer < 126) {
+            if (hole.ballTouched && successTimer < 126) {
                 successTimer++;
                 //color is golden on the last time
-                if (successNumber == 2 && holes[i].hasBall && !solved) {
-                    holes[i].golden = true;
+                if (successNumber == 2 && hole.hasBall && !solved) {
+                    hole.golden = true;
                     solved = true;
                     solveFunction.run();
                     level.gameplayScreen.sound3.play();
                 }
                 //make ball flash its opacity
                 if (successTimer >= 25 && successTimer < 50) {
-                    holes[i].hasBall = false;
+                    hole.hasBall = false;
                 } else if (successTimer >= 50 && successTimer < 75) {
-                    holes[i].hasBall = true;
+                    hole.hasBall = true;
                 } else if (successTimer >= 75 && successTimer < 100) {
-                    holes[i].hasBall = false;
+                    hole.hasBall = false;
                 } else if (successTimer >= 100 && successTimer < 125) {
-                    holes[i].hasBall = true;
+                    hole.hasBall = true;
                 } else if (successTimer >= 125) {
                     successNumber++;
                     //prevent puzzle from resetting on the third time
                     if (successNumber != 3) {
                         successTimer = 0;
                         whackTimer = 0;
-                        holes[i].hasBall = false;
-                        holes[i].ballTouched = false;
+                        hole.hasBall = false;
+                        hole.ballTouched = false;
                     }
 
                 }
             }
         }
         //reset touchPosition after pressing a hole. No cheating!
-        for (int i = 0; i < holes.length; i++) {
-            if (holes[i].touchHole(level.touchPosition)) {
+        for (Hole hole : holes) {
+            if (hole.touchHole(level.touchPosition)) {
                 level.touchPosition.set(new Vector2());
             }
         }

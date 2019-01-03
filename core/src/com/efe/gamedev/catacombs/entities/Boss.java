@@ -10,10 +10,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.DelayedRemovalArray;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
-import com.efe.gamedev.catacombs.entities.Catacomb;
-import com.efe.gamedev.catacombs.entities.Item;
-import com.efe.gamedev.catacombs.entities.Laser;
-import com.efe.gamedev.catacombs.entities.SpikePillar;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
@@ -26,7 +22,7 @@ public class Boss {
     public Vector2 position;
     private Vector2 velocity;
     private Level level;
-    public Color CLOTHES_COLOR = Color.DARK_GRAY;
+    private Color CLOTHES_COLOR = Color.DARK_GRAY;
     //eye positions
     public Vector2 eyeLookLeft;
     public Vector2 eyeLookRight;
@@ -72,7 +68,7 @@ public class Boss {
     //spike pillars
     public boolean useSpikePillars;
     public float spikePillarTimer;
-    public Array<SpikePillar> spikePillars;
+    private Array<SpikePillar> spikePillars;
     //fight with player
     public float health;
     public boolean danger;
@@ -115,11 +111,11 @@ public class Boss {
         shootLasers = false;
         laserTimer = 0;
         lasersShot = 0;
-        lasers = new DelayedRemovalArray<Laser>();
+        lasers = new DelayedRemovalArray<>();
         //spike pillars
         useSpikePillars = false;
         spikePillarTimer = 0;
-        spikePillars = new Array<SpikePillar>();
+        spikePillars = new Array<>();
         spikePillars.add(new SpikePillar(new Vector2(-100, 100), level));
         spikePillars.add(new SpikePillar(new Vector2(-60, 100), level));
         spikePillars.add(new SpikePillar(new Vector2(-20, 100), level));
@@ -384,7 +380,7 @@ public class Boss {
         }
 
         //move eyes and mouth
-        lookAround(delta, 5);
+        lookAround(delta);
     }
 
     public boolean playerHitBySpikePillar () {
@@ -409,7 +405,7 @@ public class Boss {
         }
     }
 
-    public void moveBoss (float delta, float moveSpeed, Vector2 movePosition) {
+    private void moveBoss (float delta, float moveSpeed, Vector2 movePosition) {
         //move boss when a move position is entered
         if ((!(position.x < movePosition.x + 1) || !(position.x > movePosition.x)) && !movePosition.equals(new Vector2())) {
             //go left
@@ -458,10 +454,11 @@ public class Boss {
     }
 
     //look at player
-    private void lookAround (float delta, float moveSpeed) {
+    private void lookAround (float delta) {
 
+        float moveSpeed = 5;
         //set mouth moving speed
-        float mouthSpeed = (moveSpeed / 2);
+        float mouthSpeed = (5 / 2);
 
         //if viewport is touched
         if (!level.getPlayer().getPosition().equals(new Vector2())) {
@@ -493,11 +490,11 @@ public class Boss {
     }
 
     private boolean insideCatacomb () {
+        //since the boss is always in catacombs index 0, we can always use the 0 index for the currentCatacomb
         Catacomb currentCatacomb = level.catacombs.get(0);
         //check if position.x is more than catacomb's left side
-        boolean inside = position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55;
         //return results to determine if player is within catacomb's bounds
-        return inside;
+        return (position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55);
     }
 
     private boolean outsideCatacombLeft () {
@@ -525,9 +522,9 @@ public class Boss {
         return outsideWidth;
     }
 
-    private void talk (ShapeRenderer renderer, float talkSpeed) {
+    private void talk (ShapeRenderer renderer) {
         //speed
-        mouthFrameTimer += talkSpeed;
+        mouthFrameTimer += Constants.MOUTH_TALKING_SPEED;
 
         //talk frames to make mouth move
         if (mouthFrameTimer >= 0 && mouthFrameTimer < 50) {
@@ -636,7 +633,7 @@ public class Boss {
         } else if (mouthState == Enums.MouthState.OPEN) {
             renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
         } else if (mouthState == Enums.MouthState.TALKING) {
-            talk(renderer, Constants.MOUTH_TALKING_SPEED);
+            talk(renderer);
         }
 
         //health bar

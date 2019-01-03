@@ -1,6 +1,5 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -13,10 +12,14 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 3/8/2018.
+ * This is the Guard class, which has many different states it can be in
+ * The default state of the Guard is patrolling the Catacombs that it is in, but it can also talk to and attack the player
+ * One of the player's enemy classes
  */
 
 public class Guard {
 
+    //position variables
     public Vector2 position;
     private Vector2 velocity;
 
@@ -260,7 +263,7 @@ public class Guard {
         }
         //make guard look around at player
         if (!suspicious) {
-            lookAround(delta, 5, targetPosition);
+            lookAround(delta, targetPosition);
             //reset suspicionTimer
             suspicionTimer = 0;
         } else {
@@ -470,13 +473,6 @@ public class Guard {
             //otherwise, reset
             resetLegs();
         }
-        //move away from player
-        /*if (position.x >= level.getPlayer().getPosition().x && guardTouchesPlayer()) {
-            position.x += delta * moveSpeed;
-        }
-        if (position.x < level.getPlayer().getPosition().x && guardTouchesPlayer()) {
-            position.x -= delta * moveSpeed;
-        }*/
         //guard collides with player when falling
         Vector2 playerPosition = new Vector2(level.getPlayer().getPosition());
         Catacomb currentCatacomb = level.catacombs.get(level.currentCatacomb);
@@ -502,9 +498,8 @@ public class Guard {
     private boolean insideCatacomb () {
         Catacomb currentCatacomb = level.catacombs.get(guardCatacomb);
         //check if position.x is more than catacomb's left side
-        boolean inside = position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55;
         //return results to determine if player is within catacomb's bounds
-        return inside;
+        return (position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55);
     }
 
     private boolean outsideCatacombLeft () {
@@ -532,8 +527,9 @@ public class Guard {
         return outsideWidth;
     }
 
-    private void lookAround (float delta, float moveSpeed, Vector2 movePosition) {
+    private void lookAround (float delta, Vector2 movePosition) {
 
+        float moveSpeed = 5;
         //set mouth moving speed
         float mouthSpeed = (moveSpeed / 2);
 
@@ -579,10 +575,10 @@ public class Guard {
         //A simple timer loop that makes Guard look right, then look left, then repeat.
         suspicionTimer++;
         if (suspicionTimer > 0 && suspicionTimer <= 100) {
-            lookAround(delta, 5, new Vector2(position.x + 20, position.y + 20));
+            lookAround(delta, new Vector2(position.x + 20, position.y + 20));
             facing = Enums.Facing.RIGHT;
         } else if (suspicionTimer > 100 && suspicionTimer <= 200) {
-            lookAround(delta, 5, new Vector2(position.x - 20, position.y + 20));
+            lookAround(delta, new Vector2(position.x - 20, position.y + 20));
             facing = Enums.Facing.LEFT;
         } else if (suspicionTimer > 200) {
             suspicionTimer = 0;
@@ -631,9 +627,9 @@ public class Guard {
         legRotate = 180 + LEG_MOVEMENT_DISTANCE * MathUtils.sin(MathUtils.PI2 * cyclePosition);
     }
 
-    private void talk (ShapeRenderer renderer, float talkSpeed) {
+    private void talk (ShapeRenderer renderer) {
         //speed
-        mouthFrameTimer += talkSpeed;
+        mouthFrameTimer += Constants.MOUTH_TALKING_SPEED;
 
         //talk frames to make mouth move
         if (mouthFrameTimer >= 0 && mouthFrameTimer < 50) {
@@ -799,7 +795,7 @@ public class Guard {
         } else if (mouthState == Enums.MouthState.OPEN) {
             renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
         } else if (mouthState == Enums.MouthState.TALKING) {
-            talk(renderer, Constants.MOUTH_TALKING_SPEED);
+            talk(renderer);
         }
 
         //electricity shocking guard from player

@@ -3,11 +3,11 @@ package com.efe.gamedev.catacombs.items;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.efe.gamedev.catacombs.util.Constants;
 
 /**
  * Created by coder on 5/5/2018.
  * An old piece of technology, used by guards.
+ * Used mainly for decoration, or as walkie-talkie
  */
 
 public class Phone {

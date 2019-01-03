@@ -7,6 +7,7 @@ import com.efe.gamedev.catacombs.util.Constants;
 
 /**
  * Created by coder on 6/13/2018.
+ * Potions can be drunk to enable a certain ability, such as electricity power, invisibility, or the ability to go through walls
  */
 
 public class Potion {
@@ -48,12 +49,16 @@ public class Potion {
         //top of potion
         renderer.rect(position.x + potionWidth/4, position.y, (potionWidth*0.75f) - (potionWidth/4f), 4);
         //liquid inside of potion
-        if (type.equals("invisibility")) {
-            renderer.setColor(Color.SKY);
-        } else if (type.equals("ghost")) {
-            renderer.setColor(Color.WHITE);
-        } else if (type.equals("shock")) {
-            renderer.setColor(Color.GREEN);
+        switch (type) {
+            case "invisibility":
+                renderer.setColor(Color.SKY);
+                break;
+            case "ghost":
+                renderer.setColor(Color.WHITE);
+                break;
+            case "shock":
+                renderer.setColor(Color.GREEN);
+                break;
         }
         if (full) {
             renderer.triangle(position.x + 0.5f, (position.y - 4) + 0.5f, position.x + potionWidth / 4, position.y - 1f, (position.x + potionWidth) - 1, position.y - 3.5f);
@@ -61,6 +66,7 @@ public class Potion {
         }
     }
 
+    //detect touches on potion
     public boolean touchPotion (Vector2 touchPosition) {
         return (touchPosition.x > position.x && touchPosition.x < position.x + potionWidth && touchPosition.y > position.y - 4 && touchPosition.y < position.y + 4);
     }

@@ -2,7 +2,6 @@ package com.efe.gamedev.catacombs.entities;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
@@ -11,7 +10,8 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 8/26/2018.
- * Prisoners other than the player
+ * Prisoners other than the player that give player information
+ * They have similar clothing to the player
  */
 
 public class Prisoner {
@@ -23,7 +23,7 @@ public class Prisoner {
     public boolean mindWipe;
     private Level level;
     private int prisonerCatacomb;
-    public Color CLOTHES_COLOR = Color.GOLDENROD;
+    private Color CLOTHES_COLOR = Color.GOLDENROD;
     //eye positions
     public Vector2 eyeLookLeft;
     public Vector2 eyeLookRight;
@@ -38,8 +38,6 @@ public class Prisoner {
     //rotate legs
     public long startTime;
     public float legRotate;
-    private static final float LEG_MOVEMENT_DISTANCE = 20;
-    private static final float LEG_PERIOD = 1.5f;
 
     public Enums.Facing facing;
 
@@ -95,11 +93,12 @@ public class Prisoner {
             cageUnlocked = true;
         }
         //move eyes and mouth
-        lookAround(delta, 5);
+        lookAround(delta);
     }
     //look at player
-    private void lookAround (float delta, float moveSpeed) {
+    private void lookAround (float delta) {
 
+        float moveSpeed = 5;
         //set mouth moving speed
         float mouthSpeed = (moveSpeed / 2);
 
@@ -144,14 +143,13 @@ public class Prisoner {
     private boolean insideCatacomb () {
         Catacomb currentCatacomb = level.catacombs.get(prisonerCatacomb);
         //check if position.x is more than catacomb's left side
-        boolean inside = position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55;
         //return results to determine if player is within catacomb's bounds
-        return inside;
+        return (position.x > currentCatacomb.position.x + 55 && position.x < currentCatacomb.position.x + currentCatacomb.width - 55);
     }
 
-    private void talk (ShapeRenderer renderer, float talkSpeed) {
+    private void talk (ShapeRenderer renderer) {
         //speed
-        mouthFrameTimer += talkSpeed;
+        mouthFrameTimer += Constants.MOUTH_TALKING_SPEED;
 
         //talk frames to make mouth move
         if (mouthFrameTimer >= 0 && mouthFrameTimer < 50) {
@@ -261,7 +259,7 @@ public class Prisoner {
         } else if (mouthState == Enums.MouthState.OPEN) {
             renderer.circle(position.x + mouthOffset.x, position.y - (Constants.HEAD_SIZE / 3) + mouthOffset.y, Constants.HEAD_SIZE / 6, Constants.HEAD_SEGMENTS);
         } else if (mouthState == Enums.MouthState.TALKING) {
-            talk(renderer, Constants.MOUTH_TALKING_SPEED);
+            talk(renderer);
         }
 
         //draw cage around prisoner if caged is true

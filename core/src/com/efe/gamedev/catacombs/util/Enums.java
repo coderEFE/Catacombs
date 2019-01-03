@@ -2,6 +2,7 @@ package com.efe.gamedev.catacombs.util;
 
 /**
  * Created by coder on 11/20/2017.
+ * This class takes care of enums used by other classes and objects
  */
 
 public class Enums {

@@ -45,9 +45,7 @@ import com.efe.gamedev.catacombs.util.Enums;
 
 public class Level extends InputAdapter {
 
-    private static final String TAG = Level.class.getName();
-
-    //gameplay screen
+    //game-play screen
     public GameplayScreen gameplayScreen;
     //all levels
     public Levels superior;
@@ -57,7 +55,7 @@ public class Level extends InputAdapter {
     private Viewport hudViewport;
     //viewport touch position
     public Vector2 viewportPosition;
-    //seperate touch position for buttons and things
+    //separate touch position for buttons and things
     public Vector2 touchPosition;
     public Vector2 lookPosition;
     public boolean pressDown;
@@ -75,7 +73,7 @@ public class Level extends InputAdapter {
     //Exit door
     public Exit exitDoor;
     //speechBubbles
-    public Array<SpeechBubble> speechBubbles;
+    Array<SpeechBubble> speechBubbles;
     public int currentBubble;
     //save last bubble seen
     public int lastSeenBubble;
@@ -93,26 +91,26 @@ public class Level extends InputAdapter {
     //player's Inventory
     public Inventory inventory;
     //Chests
-    public Array<Chest> chests;
+    Array<Chest> chests;
     //Words
     public Array<Word> words;
     //Puzzles
-    public Array<Puzzle> puzzles;
+    Array<Puzzle> puzzles;
     //Target box
-    public Target targetBox;
+    Target targetBox;
     //guards
     public Array<Guard> guards;
     //Levers
-    public Array<Lever> levers;
+    Array<Lever> levers;
     //Doors
     public Array<Door> doors;
-    public boolean usedDoor;
+    boolean usedDoor;
     //Signs
-    public Array<Sign> signs;
+    Array<Sign> signs;
     //Electrical wire puzzles
     public Array<Electricity> wires;
     //prisoners
-    public Array<Prisoner> prisoners;
+    Array<Prisoner> prisoners;
     //bosses
     public Array<Boss> bosses;
 
@@ -121,11 +119,11 @@ public class Level extends InputAdapter {
     public float torchLight;
     private static final float TORCH_MOVEMENT_DISTANCE = 5;
     private static final float TORCH_PERIOD = 2f;
-    public boolean levelStarted = false;
+    boolean levelStarted = false;
     public boolean torchFade;
     public boolean torchUp;
     //alarm
-    public boolean alarm;
+    boolean alarm;
     private float alarmLight;
     public boolean shake;
     //camera move
@@ -148,7 +146,7 @@ public class Level extends InputAdapter {
         shake = false;
         cameraPosition = new Vector2();
         //all items
-        collectedItemTypes = new Array<String>();
+        collectedItemTypes = new Array<>();
         collectedItemTypes.add("key"); collectedItemTypes.add("dagger"); collectedItemTypes.add("gold");
         collectedItemTypes.add("phone"); collectedItemTypes.add("diamond"); collectedItemTypes.add("stungun");
         collectedItemTypes.add("sapphire"); collectedItemTypes.add("ruby"); collectedItemTypes.add("emerald");
@@ -159,6 +157,11 @@ public class Level extends InputAdapter {
             lastSeenBubble = 60;
         } else {
             lastSeenBubble = 0;
+        }
+
+        //update which items were collected
+        for (int i = 0; i < collectedItems.length; i++) {
+            collectedItems[i] = gameplayScreen.game.getItemCollected(i);
         }
 
         victory = false;
@@ -247,11 +250,7 @@ public class Level extends InputAdapter {
             }
         }
         //check if player is dragging bomb
-        if (inventory.touchItem("bomb") != -1 && !inventory.newItem) {
-            inventory.dragItem = true;
-        } else {
-            inventory.dragItem = false;
-        }
+        inventory.dragItem = inventory.touchItem("bomb") != -1 && !inventory.newItem;
         //set bomb to player's touch position when bomb is being dragged
         if (inventory.dragItem) {
             inventory.selectedItem = inventory.touchItem("bomb");
@@ -294,7 +293,8 @@ public class Level extends InputAdapter {
 
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.BACK) {
+        //when you press the back key, it takes to the pause menu and not the last activity
+        if (keycode == Input.Keys.BACK && !victory && !defeat) {
             inventory.paused = true;
         }
         return false;
@@ -500,7 +500,7 @@ public class Level extends InputAdapter {
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
-    public void renderHUD (ShapeRenderer renderer) {
+    void renderHUD (ShapeRenderer renderer) {
         //apply viewport
         viewport.apply();
         //draw speech bubbles with special blends to enable color alpha changes
@@ -555,7 +555,7 @@ public class Level extends InputAdapter {
         renderer.rectLine(shapePosition.x, shapePosition.y + shapeHeight, shapePosition.x, shapePosition.y, 4);
     }
 
-    public void renderText (SpriteBatch batch, BitmapFont font, BitmapFont font2) {
+    void renderText (SpriteBatch batch, BitmapFont font, BitmapFont font2) {
         if (!victory && !defeat) {
             //speechBubble text
             if (show && !inventory.paused && !inventory.newItem) {
@@ -607,7 +607,7 @@ public class Level extends InputAdapter {
         }
     }
 
-    public void renderWords (SpriteBatch batch, BitmapFont font) {
+    void renderWords (SpriteBatch batch, BitmapFont font) {
         //words
         if (!inventory.paused) {
             for (Word word : words) {
@@ -622,8 +622,6 @@ public class Level extends InputAdapter {
 
     public DelayedRemovalArray<Item> getItems () {
         return items;
-    };
-
-    public Array<SpeechBubble> getSpeechBubbles () { return speechBubbles; }
+    }
 
 }

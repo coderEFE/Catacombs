@@ -2,14 +2,13 @@ package com.efe.gamedev.catacombs.items;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
 
 /**
  * Created by coder on 2/27/2018.
- * Dagger item used as weapon
+ * Dagger item used as weapon to fight guards
  */
 
 public class Dagger {

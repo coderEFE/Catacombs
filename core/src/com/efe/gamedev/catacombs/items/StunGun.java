@@ -14,6 +14,7 @@ import com.efe.gamedev.catacombs.util.Enums;
 /**
  * Created by coder on 6/2/2018.
  * Stun Gun shoots stun item.lasers
+ * It can be used by the Player or by Guards
  */
 
 public class StunGun {
@@ -45,51 +46,7 @@ public class StunGun {
 
     public void render (ShapeRenderer renderer, Level level, Item item) {
         renderer.set(ShapeRenderer.ShapeType.Filled);
-        //TODO: delete this
-        /*//item.lasers
-        //make player bounds
-        Rectangle playerBounds = new Rectangle(level.getPlayer().getPosition().x - Constants.HEAD_SIZE,
-                level.getPlayer().getPosition().y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f,
-                Constants.PLAYER_WIDTH * 2f,
-                Constants.PLAYER_HEIGHT * 2.5f);
-
-        for (int i = 0; i < item.lasers.size; i++) {
-            if (fire) {
-                //item.lasers collide
-                for (int j = 0; j < item.lasers.size; j++) {
-                    if (item.lasers.get(i).laserBounds().overlaps(item.lasers.get(j).laserBounds()) && i != j) {
-                        item.lasers.removeIndex(i);
-                    }
-                }
-            }
-        }
-        //hit player
-        for (int i = 0; i < item.lasers.size; i++) {
-            if (item.lasers.get(i).laserBounds().overlaps(playerBounds) && !level.getPlayer().duck && fire && item.lasers.size > 0 && item.lasers.get(i).enemyLaser) {
-                if (level.getPlayer().health > 0) {
-                    level.getPlayer().health -= 2;
-                }
-                item.lasers.removeIndex(i);
-            }
-        }
-        //hit player's shield
-        for (int i = 0; i < item.lasers.size; i++) {
-            if (level.getPlayer().heldItem.itemType.equals("shield") && item.lasers.get(i).enemyLaser && ((level.getPlayer().facing == Enums.Facing.RIGHT && item.lasers.get(i).position.x < level.getPlayer().getPosition().x + Constants.PLAYER_WIDTH + 6f && item.lasers.get(i).position.x > (level.getPlayer().getPosition().x + Constants.PLAYER_WIDTH) - 6f) || (level.getPlayer().facing == Enums.Facing.LEFT && item.lasers.get(i).position.x > level.getPlayer().getPosition().x - Constants.PLAYER_WIDTH && item.lasers.get(i).position.x < (level.getPlayer().getPosition().x - Constants.PLAYER_WIDTH) + 6f))) {
-                item.lasers.removeIndex(i);
-            }
-        }
-        //hit catacomb left wall
-        for (int i = 0; i < item.lasers.size; i++) {
-            if (item.lasers.get(i).position.x < level.catacombs.get(level.currentCatacomb).position.x + 30 && item.lasers.size > 0) {
-                item.lasers.removeIndex(i);
-            }
-        }
-        //hit catacomb right wall
-        for (int i = 0; i < item.lasers.size; i++) {
-            if (item.lasers.get(i).position.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width - 30 && item.lasers.size > 0) {
-                item.lasers.removeIndex(i);
-            }
-        }*/
+        //Some logic that deals with lasers and collisions
         //fire random item.lasers
         if (fire) {
             if (MathUtils.random() < 0.03f) {
@@ -106,24 +63,6 @@ public class StunGun {
             level.gameplayScreen.sound7.play();
             shoot = false;
         }
-        //item.lasers hit guard
-        /*for (int i = 0; i < item.lasers.size; i++) {
-            for (int j = 0; j < level.guards.size; j++) {
-                //make guard bounds
-                Rectangle guardBounds = new Rectangle(level.guards.get(j).position.x - Constants.HEAD_SIZE,
-                        level.guards.get(j).position.y + Constants.HEAD_SIZE - Constants.PLAYER_HEIGHT * 2.5f,
-                        Constants.PLAYER_WIDTH * 2f,
-                        Constants.PLAYER_HEIGHT * 2.5f);
-                //hurt guard when item.lasers' bounds overlap guards' bounds
-                if (item.lasers.get(i).laserBounds().overlaps(guardBounds) && !level.guards.get(j).guardItem.equals("shield") && !item.lasers.get(i).enemyLaser) {
-                    if (level.guards.get(j).health > 0) {
-                        level.guards.get(j).health -= 2;
-                    }
-                    //remove laser after colliding with guard
-                    item.lasers.removeIndex(i);
-                }
-            }
-        }*/
         //item.lasers hit boss
         for (int i = 0; i < item.lasers.size; i++) {
             for (int j = 0; j < level.bosses.size; j++) {

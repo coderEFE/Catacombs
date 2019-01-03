@@ -8,6 +8,7 @@ import com.efe.gamedev.catacombs.util.Constants;
 /**
  * Created by coder on 8/30/2018.
  * Item used to blend in with the guards.
+ * Is only used in the 14th level
  */
 
 public class Disguise {
@@ -48,8 +49,6 @@ public class Disguise {
         renderer.setColor(new Color(Constants.GUARD_CLOTHES_COLOR.r * 0.4f, Constants.GUARD_CLOTHES_COLOR.g * 0.4f, Constants.GUARD_CLOTHES_COLOR.b * 0.4f, 1f));
         renderer.rect(position.x + 2, position.y + 1, 2, 1);
         renderer.rect(position.x + 2, position.y - 0.5f, 2, 1);
-        //renderer.setColor(Color.GRAY);
-        //renderer.circle(position.x + 1 + ((clothesWidth * 0.75f) / 2f),(position.y - clothesWidth / 2f) + clothesWidth, clothesWidth / 2f);
     }
     
 }

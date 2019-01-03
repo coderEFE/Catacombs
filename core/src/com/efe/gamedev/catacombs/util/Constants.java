@@ -1,10 +1,10 @@
 package com.efe.gamedev.catacombs.util;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Vector2;
 
 /**
  * Created by coder on 11/13/2017.
+ * This class holds many variables that stay the same and can be referenced by any class
  */
 
 public class Constants {
@@ -16,7 +16,6 @@ public class Constants {
     public static final float MENU_WORLD_SIZE = 480.0f;
     public static final Color MENU_BACKGROUND_COLOR = Color.BLUE;
     public static String CURRENT_SONG = "black_vortex";
-    public static float SONG_POSITION = 0;
     //public static
     //default gravity is 10
     public static final float GRAVITY = 10;

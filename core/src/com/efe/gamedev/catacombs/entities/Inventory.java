@@ -1,12 +1,10 @@
 package com.efe.gamedev.catacombs.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.DelayedRemovalArray;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -14,24 +12,20 @@ import com.efe.gamedev.catacombs.Level;
 import com.efe.gamedev.catacombs.items.Diamond;
 import com.efe.gamedev.catacombs.util.Constants;
 import com.efe.gamedev.catacombs.util.Enums;
-import com.efe.gamedev.catacombs.util.Prefs;
-
-import java.util.Locale;
 
 /**
  * Created by coder on 11/24/2017.
  * This is the Player's Inventory where the Player holds his/her items.
+ * The inventory class is also responsible for pulling up the pause menu and the new item pop-up display
  */
 
 public class Inventory {
-
-    private static final String TAG = Inventory.class.getName();
 
     private Level level;
     public Vector2 position;
     public float width;
     public float height;
-    public float inventorySlots = 5;
+    private float inventorySlots = 5;
     public DelayedRemovalArray<Item> inventoryItems;
     public int selectedItem = -1;
     //is game paused
@@ -52,7 +46,7 @@ public class Inventory {
 
     //new items
     public boolean newItem;
-    public String newItemType;
+    String newItemType;
     private Item newCollectedItem;
     private float newItemTimer;
     private float newItemOpacity;
@@ -65,8 +59,8 @@ public class Inventory {
         position = new Vector2();
         width = 0;
         height = 0;
-        inventoryItems = new DelayedRemovalArray<Item>();
-        scoreDiamonds = new DelayedRemovalArray<Diamond>();
+        inventoryItems = new DelayedRemovalArray<>();
+        scoreDiamonds = new DelayedRemovalArray<>();
         paused = false;
         newItem = false;
         newItemType = "";
@@ -107,25 +101,31 @@ public class Inventory {
         yesButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Yes", 30, 30, Color.BLUE,
                 () -> {
                     playButton.playMove = 0; homeButton.doorMove = 0; resetButton.arrowMove = -200;
-                    if (stage.equals("ValidateReset")) {
-                        level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0;
-                    } else if (stage.equals("ValidateHome")) {
-                        //save progress
-                        level.gameplayScreen.game.setFurthestLevel(level.superior.furthestLevel);
-                        level.gameplayScreen.showMenuScreen(level.superior.furthestLevel);
-                    } else if (stage.equals("ValidateSpeech")) {
-                        speechButton.speech = !speechButton.speech;
-                        if (!speechButton.speech) {
-                            paused = false;
-                            level.getPlayer().armRotate = 0;
-                            level.getPlayer().legRotate = 170;
-                            level.getPlayer().startTime = TimeUtils.nanoTime();
-                            level.touchLocked = false;
-                            level.show = false;
-                            level.continueBubbles = false;
-                        } else {
-                            level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0;
-                        }
+                    switch (stage) {
+                        case "ValidateReset":
+                            level.superior.configureLevel(level);
+                            level.getPlayer().spawnTimer = 0;
+                            break;
+                        case "ValidateHome":
+                            //save progress
+                            level.gameplayScreen.game.setFurthestLevel(level.superior.furthestLevel);
+                            level.gameplayScreen.showMenuScreen();
+                            break;
+                        case "ValidateSpeech":
+                            speechButton.speech = !speechButton.speech;
+                            if (!speechButton.speech) {
+                                paused = false;
+                                level.getPlayer().armRotate = 0;
+                                level.getPlayer().legRotate = 170;
+                                level.getPlayer().startTime = TimeUtils.nanoTime();
+                                level.touchLocked = false;
+                                level.show = false;
+                                level.continueBubbles = false;
+                            } else {
+                                level.superior.configureLevel(level);
+                                level.getPlayer().spawnTimer = 0;
+                            }
+                            break;
                     }
                 },
                 level);
@@ -242,7 +242,7 @@ public class Inventory {
                     if (!level.getPlayer().fighting) {
                         level.getPlayer().holdItem(inventoryItems.get(selectedItem).itemType);
                         //if item has not been collected before, pop up a screen telling what item is.
-                        if (!level.collectedItems[level.collectedItemTypes.indexOf(inventoryItems.get(selectedItem).itemType, true)] && !level.gameplayScreen.game.getItemCollected(level.collectedItemTypes.indexOf(newItemType, true))) {
+                        if (!level.collectedItems[level.collectedItemTypes.indexOf(inventoryItems.get(selectedItem).itemType, true)]) {
                             level.collectedItems[level.collectedItemTypes.indexOf(inventoryItems.get(selectedItem).itemType, true)] = true;
                             //reset stuff
                             level.touchPosition = new Vector2();
@@ -250,7 +250,6 @@ public class Inventory {
                             newItem = true;
                             //play sound
                             level.gameplayScreen.sound4.play();
-                            //Gdx.app.log(TAG, "" + level.gameplayScreen.game.getItemCollected(level.collectedItemTypes.indexOf(inventoryItems.get(selectedItem).itemType, true)));
                         }
                     }
                 } else {
@@ -303,6 +302,7 @@ public class Inventory {
                 newCollectedItem.collected = true;
                 newCollectedItem.itemType = newItemType;
                 newCollectedItem.render(renderer, level);
+                level.gameplayScreen.game.setItemCollected(true, level.collectedItemTypes.indexOf(newItemType, true));
             }
         } else {
             //target button which player uses to shoot stun gun lasers
@@ -365,41 +365,48 @@ public class Inventory {
             backButton.position = new Vector2(level.getPlayer().getPosition().x - 80, level.getPlayer().getPosition().y - 60);
             yesButton.position = new Vector2(level.getPlayer().getPosition().x + 5, level.getPlayer().getPosition().y - 50);
             noButton.position = new Vector2(level.getPlayer().getPosition().x - 45, level.getPlayer().getPosition().y - 50);
-            if (stage.equals("Main")) {
-                resetButton.render(renderer);
-                homeButton.render(renderer);
-                playButton.render(renderer);
-                //if level is less than 5, show speech button, else, show the instruction button instead
-                if (level.superior.currentLevel < 4) {
-                    speechButton.render(renderer);
-                } else {
-                    guideButton.render(renderer);
-                }
-                mapButton.render(renderer);
-            } else if (stage.equals("Map")) {
-                //map of catacombs
-                for(int i = 0; i < level.catacombs.size; i++) {
-                    renderer.setColor(Color.BLUE);
-                    if (level.catacombs.get(i).width == 200) {
-                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+            switch (stage) {
+                case "Main":
+                    resetButton.render(renderer);
+                    homeButton.render(renderer);
+                    playButton.render(renderer);
+                    //if level is less than 5, show speech button, else, show the instruction button instead
+                    if (level.superior.currentLevel < 4) {
+                        speechButton.render(renderer);
                     } else {
-                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
-                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 3.125f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
-                        renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 6.25f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                        guideButton.render(renderer);
                     }
-                }
-                //player symbol on map
-                renderer.setColor(new Color(Color.BLUE.r / 3f, Color.BLUE.g / 3f, Color.BLUE.b / 3f, 1));
-                renderer.circle(level.getPlayer().getPosition().x + (level.getPlayer().getPosition().x / 16f), level.getPlayer().getPosition().y + (level.getPlayer().getPosition().y / 20f), 1.5f + (playButton.playMove / 40f), 4);
-                //back button
-                backButton.render(renderer);
-            } else if (stage.equals("Instructions")) {
-                //back button
-                backButton.render(renderer);
-            } else if (stage.equals("ValidateReset") || stage.equals("ValidateSpeech") || stage.equals("ValidateHome")) {
-                //verification stages have a "yes" and a "no" button
-                yesButton.render(renderer);
-                noButton.render(renderer);
+                    mapButton.render(renderer);
+                    break;
+                case "Map":
+                    //map of catacombs
+                    for (int i = 0; i < level.catacombs.size; i++) {
+                        renderer.setColor(Color.BLUE);
+                        if (level.catacombs.get(i).width == 200) {
+                            renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                        } else {
+                            renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f), level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                            renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 3.125f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                            renderer.ellipse(level.getPlayer().getPosition().x + ((level.catacombs.get(i).position.x + 15) / 16f) + 6.25f, level.getPlayer().getPosition().y + ((level.catacombs.get(i).position.y) / 20f), 11, 9, 6);
+                        }
+                    }
+                    //player symbol on map
+                    renderer.setColor(new Color(Color.BLUE.r / 3f, Color.BLUE.g / 3f, Color.BLUE.b / 3f, 1));
+                    renderer.circle(level.getPlayer().getPosition().x + (level.getPlayer().getPosition().x / 16f), level.getPlayer().getPosition().y + (level.getPlayer().getPosition().y / 20f), 1.5f + (playButton.playMove / 40f), 4);
+                    //back button
+                    backButton.render(renderer);
+                    break;
+                case "Instructions":
+                    //back button
+                    backButton.render(renderer);
+                    break;
+                case "ValidateReset":
+                case "ValidateSpeech":
+                case "ValidateHome":
+                    //verification stages have a "yes" and a "no" button
+                    yesButton.render(renderer);
+                    noButton.render(renderer);
+                    break;
             }
         }
     }
@@ -409,14 +416,19 @@ public class Inventory {
             font.setColor(Color.BLACK);
             font.draw(batch, "PAUSED", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 150f), hudViewport.getWorldHeight() / 1.2f);
             font2.setColor(Color.WHITE);
-            if (stage.equals("ValidateReset")) {
-                font2.draw(batch, "Would you like to restart the level?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 200f), hudViewport.getWorldHeight() / 1.5f);
-            } else if (stage.equals("ValidateHome")) {
-                font2.draw(batch, "Would you like to exit to home menu?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 210f), hudViewport.getWorldHeight() / 1.5f);
-            } else if (stage.equals("ValidateSpeech")) {
-                font2.draw(batch, speechButton.speech ? " Would you like to play the\n level without instructions?" : "   Would you like to replay\n the level with instructions?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 170f), hudViewport.getWorldHeight() / 1.5f);
-            } else if (stage.equals("Instructions")) {
-                font2.draw(batch, "You, the Player, are imprisoned in the Catacombs and are attempting to escape to the surface. To move around, tap on the area which you would like to walk to. To jump, tap twice in either upper corner. To unlock a door, tap on a key in your inventory and tap on the button of the door you want. To drink a potion, tap on the potion in the Player's hand.", hudViewport.getWorldWidth() / 4.5f , hudViewport.getWorldHeight() / 1.5f, hudViewport.getWorldWidth() / 1.7f, 5, true);
+            switch (stage) {
+                case "ValidateReset":
+                    font2.draw(batch, "Would you like to restart the level?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 200f), hudViewport.getWorldHeight() / 1.5f);
+                    break;
+                case "ValidateHome":
+                    font2.draw(batch, "Would you like to exit to home menu?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 210f), hudViewport.getWorldHeight() / 1.5f);
+                    break;
+                case "ValidateSpeech":
+                    font2.draw(batch, speechButton.speech ? " Would you like to play the\n level without instructions?" : "   Would you like to replay\n the level with instructions?", hudViewport.getWorldWidth() / 2f - ((Math.min(hudViewport.getWorldWidth(), hudViewport.getWorldHeight()) / Constants.HUD_FONT_REFERENCE_SCREEN_SIZE) * 170f), hudViewport.getWorldHeight() / 1.5f);
+                    break;
+                case "Instructions":
+                    font2.draw(batch, "You, the Player, are imprisoned in the Catacombs and are attempting to escape to the surface. To move around, tap on the area which you would like to walk to. To jump, tap twice in either upper corner. To unlock a door, tap on a key in your inventory and tap on the button of the door you want. To drink a potion, tap on the potion in the Player's hand.", hudViewport.getWorldWidth() / 4.5f, hudViewport.getWorldHeight() / 1.5f, hudViewport.getWorldWidth() / 1.7f, 5, true);
+                    break;
             }
         } else if (newItem) {
             font2.setColor(Color.GOLD);
@@ -438,44 +450,45 @@ public class Inventory {
     }
     //When player collects a new Item, this function shows a summary of the Item based on its name.
     private String itemText (String newItemType) {
-        if (newItemType.equals("key")) {
-            return "Used to lock and unlock doors.";
-        } else if (newItemType.equals("dagger")) {
-            return "A small weapon used for battle.";
-        } else if (newItemType.equals("gold")) {
-            return "This precious item is highly\nprized throughout the Catacombs.";
-        } else if (newItemType.equals("phone")) {
-            return "A small device carried by Guards.";
-        } else if (newItemType.equals("diamond")) {
-            return "This jewel is used as currency.";
-        } else if (newItemType.equals("stungun")) {
-            return "A blaster capable of knocking\nout even the best of Guards.";
-        } else if (newItemType.equals("sapphire")) {
-            return "This blue gem is sometimes\nfound in the Catacombs.";
-        } else if (newItemType.equals("ruby")) {
-            return "This red gem is sometimes\nfound inside the Catacombs.";
-        } else if (newItemType.equals("emerald")) {
-            return "This green gem is sometimes\nfound in the Catacombs.";
-        } else if (newItemType.equals("invisibility")) {
-            return "A strange bubbling potion.";
-        } else if (newItemType.equals("ghost")) {
-            return "A bubbling potion that\neerily glows white.";
-        } else if (newItemType.equals("shock")) {
-            return "A potion which sizzles\nwith electric sparks.";
-        } else if (newItemType.equals("doubleKey")) {
-            return "Can only be used to\nunlock double-locks.";
-        } else if (newItemType.equals("shield")) {
-            return "This item bolsters your defence\nagainst various obstacles.";
-        } else if (newItemType.equals("bomb")) {
-            return "This explosive device can\nbe used to destroy walls.";
-        } else if (newItemType.equals("fire")) {
-            return "Fire can be used to light torches.";
-        } else if (newItemType.equals("disguise")) {
-            return "A disguise can be\nused to fool Guards.";
-        } else if (newItemType.equals("spear")) {
-            return "The weapon carried\nby the final Boss.";
-        } else {
-            return "Unknown item...";
+        switch (newItemType) {
+            case "key":
+                return "Used to lock and unlock doors.";
+            case "dagger":
+                return "A small weapon used for battle.";
+            case "gold":
+                return "This precious item is highly\nprized throughout the Catacombs.";
+            case "phone":
+                return "A small device carried by Guards.";
+            case "diamond":
+                return "This jewel is used as currency.";
+            case "stungun":
+                return "A blaster capable of knocking\nout even the best of Guards.";
+            case "sapphire":
+                return "This blue gem is sometimes\nfound in the Catacombs.";
+            case "ruby":
+                return "This red gem is sometimes\nfound inside the Catacombs.";
+            case "emerald":
+                return "This green gem is sometimes\nfound in the Catacombs.";
+            case "invisibility":
+                return "A strange bubbling potion.";
+            case "ghost":
+                return "A bubbling potion that\neerily glows white.";
+            case "shock":
+                return "A potion which sizzles\nwith electric sparks.";
+            case "doubleKey":
+                return "Can only be used to\nunlock double-locks.";
+            case "shield":
+                return "This item bolsters your defence\nagainst various obstacles.";
+            case "bomb":
+                return "This explosive device can\nbe used to destroy walls.";
+            case "fire":
+                return "Fire can be used to light torches.";
+            case "disguise":
+                return "A disguise can be\nused to fool Guards.";
+            case "spear":
+                return "The weapon carried\nby the final Boss.";
+            default:
+                return "Unknown item...";
         }
     }
 
