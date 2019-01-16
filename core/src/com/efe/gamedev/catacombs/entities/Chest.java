@@ -39,7 +39,9 @@ public class Chest {
             if (level.touchPosition.x > position.x && level.touchPosition.x < position.x + 40 && level.touchPosition.y > position.y && level.touchPosition.y < position.y + 26 && level.getPlayer().position.x > position.x && level.getPlayer().position.x < position.x + 40 && !opened) {
                 touchFunction.run();
                 opened = true;
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             }
         }
         //make chest fade away

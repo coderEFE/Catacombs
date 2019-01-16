@@ -44,7 +44,9 @@ public class SpikePillar {
                     strikeFall += (delta * 400);
                 } else {
                     hitGround = true;
-                    level.gameplayScreen.sound8.play();
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                        level.gameplayScreen.sound8.play();
+                    }
                 }
             }
             //make pillar go up when it hits the ground

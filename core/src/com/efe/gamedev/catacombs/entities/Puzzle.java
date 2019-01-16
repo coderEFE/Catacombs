@@ -74,27 +74,37 @@ public class Puzzle {
         if (type.equals("shapes1") && solution[0].equals(shapes[0].getShapeType()) && !solved) {
             solveFunction.run();
             solved = true;
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         if (type.equals("shapes2") && solution[0].equals(shapes[0].getShapeType()) && solution[1].equals(shapes[1].getShapeType()) && !solved) {
             solveFunction.run();
             solved = true;
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         if (type.equals("shapes3") && solution[0].equals(shapes[0].getShapeType()) && solution[1].equals(shapes[1].getShapeType()) && solution[2].equals(shapes[2].getShapeType()) && !solved) {
             solveFunction.run();
             solved = true;
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         if (type.equals("shapes4") && solution[0].equals(shapes[0].getShapeType()) && solution[1].equals(shapes[1].getShapeType()) && solution[2].equals(shapes[2].getShapeType()) && solution[3].equals(shapes[3].getShapeType()) && !solved) {
             solveFunction.run();
             solved = true;
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         if (type.equals("shapes5") && solution[0].equals(shapes[0].getShapeType()) && solution[1].equals(shapes[1].getShapeType()) && solution[2].equals(shapes[2].getShapeType()) && solution[3].equals(shapes[3].getShapeType()) && solution[4].equals(shapes[4].getShapeType()) && !solved) {
             solveFunction.run();
             solved = true;
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         //Shape puzzles
         switch (type) {
@@ -223,7 +233,9 @@ public class Puzzle {
                     hole.golden = true;
                     solved = true;
                     solveFunction.run();
-                    level.gameplayScreen.sound3.play();
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                        level.gameplayScreen.sound3.play(0.2f);
+                    }
                 }
                 //make ball flash its opacity
                 if (successTimer >= 25 && successTimer < 50) {
@@ -288,19 +300,25 @@ public class Puzzle {
         if (type.equals("fire1") && torch1 && !solved) {
             solved = true;
             solveFunction.run();
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         //medium
         if (type.equals("fire2") && torch1 && torch2 && !solved) {
             solved = true;
             solveFunction.run();
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
         //hard
         if (type.equals("fire3") && torch1 && torch2 && torch3 && !solved) {
             solved = true;
             solveFunction.run();
-            level.gameplayScreen.sound3.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound3.play(0.2f);
+            }
         }
     }
 

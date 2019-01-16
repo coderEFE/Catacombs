@@ -20,7 +20,6 @@ public class Word {
     private Array<Boolean> collected;
     private float countdown;
     private boolean isAWord;
-    //private boolean notAWord;
     private Level level;
     public boolean solved;
 
@@ -44,7 +43,7 @@ public class Word {
         //draw letters and check if they have been collected
         for (int i = 0; i < letters.length; i++) {
             //if you tap on letter and it is not already collected, it gets added to the word above your head and becomes collected.
-            if (level.touchPosition.dst(letterPositions[i]) < 12 && !collected.get(i) && !level.touchPosition.equals(new Vector2())) {
+            if (level.touchPosition.dst(letterPositions[i]) < 15 && !collected.get(i) && !level.touchPosition.equals(new Vector2())) {
                 collectedString = collectedString + letters[i];
                 collected.set(i, true);
             }

@@ -43,15 +43,17 @@ public class Door {
                         level.inventory.inventoryItems.removeIndex(level.inventory.selectedItem);
                         level.inventory.selectedItem = -1;
                         unlocked = true;
-                        level.gameplayScreen.sound6.play();
+                        if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                            level.gameplayScreen.sound6.play();
+                        }
                     }
                     usingDoor = true;
                     level.touchPosition = new Vector2();
                 },
-                level);
+                level, null);
         noButton = new Button(new Vector2(position.x + (doorWidth), position.y + doorHeight + 15), "No", 20, 20, Color.BROWN,
                 () -> level.touchPosition = new Vector2(),
-                level);
+                level, null);
     }
 
     public void render (ShapeRenderer renderer) {
@@ -93,6 +95,14 @@ public class Door {
                     level.viewportPosition.set(new Vector2());
                     level.touchPosition.set(new Vector2());
                     level.touchLocked = false;
+                    if (level.superior.currentLevel != 13 && level.superior.currentLevel != 11 && (level.superior.currentLevel != 10 || exitDoorIndex != 3)) {
+                        level.spawnOverride = true;
+                        //display message
+                        level.inventory.message = "New Checkpoint set";
+                        level.inventory.messageTimer = 100;
+                        //level.spawnposition = new Vector2(position.x - (doorWidth * 4.5f), position.y - (doorHeight * 5f));
+                        level.spawnposition.set(new Vector2(level.doors.get(exitDoorIndex).position.x + (doorWidth / 2f), level.doors.get(exitDoorIndex).position.y + 48f));
+                    }
                     level.getPlayer().position.set(new Vector2(level.doors.get(exitDoorIndex).position.x + (doorWidth / 2f), level.doors.get(exitDoorIndex).position.y + 48f));
                     usingDoor = false;
                 }

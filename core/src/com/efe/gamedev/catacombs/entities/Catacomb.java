@@ -195,7 +195,9 @@ public class Catacomb {
                 if (catacombStalactites.get(i).position.y < bottomLeft.y + catacombStalactites.get(i).size) {
                     if (!catacombStalactites.get(i).hit) {
                         catacombStalactites.get(i).hit = true;
-                        level.gameplayScreen.sound8.play();
+                        if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                            level.gameplayScreen.sound8.play();
+                        }
                     }
                     if (catacombStalactites.get(i).fadeTimer > 20) {
                         catacombStalactites.removeIndex(i);
@@ -209,8 +211,10 @@ public class Catacomb {
                 if ((new Vector2(catacombStalactites.get(i).position.x, catacombStalactites.get(i).position.y - catacombStalactites.get(i).size)).dst(level.getPlayer().getPosition()) < Constants.HEAD_SIZE) {
                     if (level.getPlayer().health > 0) {
                         level.getPlayer().health -= 5;
-                        // Vibrate device for 400 milliseconds
-                        Gdx.input.vibrate(400);
+                        if (level.gameplayScreen.game.getVibrationOn()) {
+                            // Vibrate device for 400 milliseconds
+                            Gdx.input.vibrate(400);
+                        }
                     }
                     catacombStalactites.removeIndex(i);
                 }

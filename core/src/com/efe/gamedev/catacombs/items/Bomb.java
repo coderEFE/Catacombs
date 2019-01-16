@@ -157,7 +157,9 @@ public class Bomb {
                 flashRed = false;
             } else if (triggerTimer > 190) {
                 //play sound and explode bomb
-                level.gameplayScreen.sound9.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound9.play();
+                }
                 exploding = true;
                 triggerTimer = 0;
                 triggered = false;

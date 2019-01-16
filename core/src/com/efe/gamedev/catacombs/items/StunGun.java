@@ -52,7 +52,9 @@ public class StunGun {
             if (MathUtils.random() < 0.03f) {
                 item.lasers.add(new Laser(new Vector2(position.x + 2, position.y + 3), true, gunFacing));
                 lasersShot++;
-                level.gameplayScreen.sound7.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound7.play();
+                }
             }
         }
         //fire item.lasers by tapping, if level is 14, don't shoot until gun is facing the boss
@@ -60,7 +62,9 @@ public class StunGun {
             //add a new laser to the lasers array
             item.lasers.add(new Laser(new Vector2(position.x + 2, position.y + 3), false, gunFacing));
             lasersShot++;
-            level.gameplayScreen.sound7.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound7.play();
+            }
             shoot = false;
         }
         //item.lasers hit boss

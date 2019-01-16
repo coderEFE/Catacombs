@@ -107,8 +107,8 @@ public class GameplayScreen extends ScreenAdapter {
         //initialize sound files
         sound1 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_menu_05_a.wav"));
         sound2 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_menu_a.wav"));
+        sound2.play();
         sound3 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_coin.wav"));
-        sound3.setVolume(sound3.play(), 0.5f);
         sound4 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_prompt.wav"));
         sound5 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_confirm_02.wav"));
         sound6 = Gdx.audio.newSound(Gdx.files.internal("sounds/nff_click_switch.wav"));
@@ -170,7 +170,7 @@ public class GameplayScreen extends ScreenAdapter {
     @Override
     public void render (float delta) {
         //first song
-        if (play_black_vortex && !music_black_vortex.isPlaying()) {
+        if (play_black_vortex && !music_black_vortex.isPlaying() && game.getMusicOn()) {
             music_black_vortex.play();
             play_black_vortex = false;
         }
@@ -181,7 +181,7 @@ public class GameplayScreen extends ScreenAdapter {
         }
         );
         //second song
-        if (play_enter_the_maze && !music_enter_the_maze.isPlaying()) {
+        if (play_enter_the_maze && !music_enter_the_maze.isPlaying() && game.getMusicOn()) {
             music_enter_the_maze.play();
             play_enter_the_maze = false;
         }
@@ -191,7 +191,7 @@ public class GameplayScreen extends ScreenAdapter {
         }
         );
         //third song
-        if (play_cave && !music_cave.isPlaying()) {
+        if (play_cave && !music_cave.isPlaying() && game.getMusicOn()) {
             music_cave.play();
             play_cave = false;
         }

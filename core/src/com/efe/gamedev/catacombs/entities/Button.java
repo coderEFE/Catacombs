@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.efe.gamedev.catacombs.Level;
+import com.efe.gamedev.catacombs.MenuScreen;
 
 /**
  * Created by coder on 12/29/2017.
@@ -21,6 +22,7 @@ public class Button {
     public Color color;
     private Runnable pressFunction;
     private Level level;
+    private MenuScreen menu;
     //move icons
     float arrowMove;
     float doorMove;
@@ -34,7 +36,7 @@ public class Button {
     boolean shown;
 
 
-    Button (Vector2 position, String type, float width, float height, Color color, final Runnable pressFunction, Level level) {
+    public Button (Vector2 position, String type, float width, float height, Color color, final Runnable pressFunction, Level level, MenuScreen menu) {
         this.position = position;
         this.type = type;
         this.width = width;
@@ -42,6 +44,7 @@ public class Button {
         this.color = color;
         this.pressFunction = pressFunction;
         this.level = level;
+        this.menu = menu;
         arrowMove = -200;
         doorMove = 0;
         speech = true;
@@ -78,31 +81,53 @@ public class Button {
 
     public void render (ShapeRenderer renderer) {
         //set speech variable to be false if someone is speaking
-        if (level.show) {
+        if (level != null && level.show) {
             speech = true;
         }
         //render button if shown is true
         if (shown) {
-            //run function when button is being touched
-            if ((width < 30 || level.pressUp) && level.lookPosition.x > position.x && level.lookPosition.x < position.x + width && level.lookPosition.y > position.y && level.lookPosition.y < position.y + height && !level.lookPosition.equals(new Vector2()) && level.touchPosition.x > position.x && level.touchPosition.x < position.x + width && level.touchPosition.y > position.y && level.touchPosition.y < position.y + height && !level.touchPosition.equals(new Vector2())) {
-                pressFunction.run();
-                //play button sound
-                if (type.equals("Play")) {
-                    level.gameplayScreen.sound2.play();
-                } else {
-                    level.gameplayScreen.sound1.play();
-                }
-                level.lookPosition = new Vector2();
-            }
             //set colors for button icons
             Color darkColor;
             Color lightColor;
-            if (level.touchPosition.x > position.x && level.touchPosition.x < position.x + width && level.touchPosition.y > position.y && level.touchPosition.y < position.y + height && !level.touchPosition.equals(new Vector2()) && level.pressDown) {
-                darkColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
-                lightColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+            if (level != null && menu == null) {
+                //run function when button is being touched
+                if ((width < 30 || level.pressUp) && pressButton(level.lookPosition) && pressButton(level.touchPosition)) {
+                    pressFunction.run();
+                    //play button sound
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                        if (type.equals("Play")) {
+                            level.gameplayScreen.sound2.play();
+                        } else {
+                            level.gameplayScreen.sound1.play();
+                        }
+                    }
+                    level.lookPosition = new Vector2();
+                }
+                if (pressButton(level.touchPosition) && level.pressDown) {
+                    darkColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                    lightColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+                } else {
+                    darkColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+                    lightColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                }
             } else {
-                darkColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
-                lightColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                //run function when button is being touched
+                if ((width < 30 || !menu.pressDown) && pressButton(menu.tapPosition) && pressButton(menu.releasePosition)) {
+                    pressFunction.run();
+                    //play button sound
+                    if (menu.game.getSoundEffectsOn()) {
+                        menu.sound5.play();
+                    }
+                    menu.tapPosition = new Vector2();
+                    menu.releasePosition = new Vector2();
+                }
+                if (pressButton(menu.tapPosition) && menu.pressDown) {
+                    darkColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                    lightColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+                } else {
+                    darkColor = new Color(color.r / 5, color.g / 5, color.b / 5, 1);
+                    lightColor = new Color(color.r / 2, color.g / 2, color.b / 2, 1);
+                }
             }
             //button
             renderer.set(ShapeRenderer.ShapeType.Filled);
@@ -191,4 +216,7 @@ public class Button {
         }
     }
 
+    private boolean pressButton (Vector2 touchPosition) {
+        return (touchPosition.x > position.x && touchPosition.x < position.x + width && touchPosition.y > position.y && touchPosition.y < position.y + height && !touchPosition.equals(new Vector2()));
+    }
 }

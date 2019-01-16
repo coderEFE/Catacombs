@@ -200,7 +200,7 @@ public class Player {
             //unlock high walls
             unlockHighWalls();
             //increase move timer when player is not moving
-            if (!moving && !level.show && !danger && !useEnergy && !drinkPotion && !fighting && !alert && !level.inventory.paused && !level.victory && !level.defeat) {
+            if (!level.pressDown && !moving && !level.show && !danger && !useEnergy && !drinkPotion && !fighting && !alert && !level.inventory.paused && !level.victory && !level.defeat) {
                 moveTimer++;
             } else {
                 moveTimer = 0;
@@ -223,22 +223,32 @@ public class Player {
             //with normal key
             if (currentCatacomb.getLockedDoors().get(3).equals("Locked") && heldItem.itemType.equals("key")) {
                 currentCatacomb.getLockedDoors().set(3, "Unlocked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                        level.gameplayScreen.sound6.play();
+                    }
+                }
             } else if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                 currentCatacomb.getLockedDoors().set(3, "Locked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             }
             //with doubleKey
             if (currentCatacomb.getLockedDoors().get(3).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
                 currentCatacomb.getLockedDoors().set(3, "Unlocked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             }
             //take away key after it is used
             level.inventory.deleteCurrentItem();
             //lock doors
         } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleRight.x + currentCatacomb.middleRightOffset.x - 5.5f, currentCatacomb.middleRight.y + currentCatacomb.middleRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(3).equals("Unlocked")) {
             currentCatacomb.getLockedDoors().set(3, "Locked");
-            level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             level.inventory.deleteCurrentItem();
         }
         //middleLeft
@@ -246,22 +256,30 @@ public class Player {
             //with normal key
             if (currentCatacomb.getLockedDoors().get(1).equals("Locked") && heldItem.itemType.equals("key")) {
                 currentCatacomb.getLockedDoors().set(1, "Unlocked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             } else if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                 currentCatacomb.getLockedDoors().set(1, "Locked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             }
             //with doubleKey
             if (currentCatacomb.getLockedDoors().get(1).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
                 currentCatacomb.getLockedDoors().set(1, "Unlocked");
-                level.gameplayScreen.sound6.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             }
             //take away key after it is used
             level.inventory.deleteCurrentItem();
             //lock doors
         } else if (heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.middleLeft.x + currentCatacomb.middleLeftOffset.x + 5.5f, currentCatacomb.middleLeft.y + currentCatacomb.middleLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4) && currentCatacomb.getLockedDoors().get(1).equals("Unlocked")) {
             currentCatacomb.getLockedDoors().set(1, "Locked");
-            level.gameplayScreen.sound6.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             level.inventory.deleteCurrentItem();
         }
     }
@@ -376,7 +394,7 @@ public class Player {
     public void tryJumping () {
         //player can jump through walls when the "ghost" Potion is drunk.
         //try jumping right if the player tapped in the upper right corner of the screen
-        if (level.touchPosition.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width - 25 && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
+        if (level.touchPosition.x > level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width - (ghost ? 15 : 25) && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(3).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(4).equals("Unlocked")) {
             if (position.x > level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f)) {
                 level.viewportPosition.set(new Vector2(level.catacombs.get(level.currentCatacomb).position.x + level.catacombs.get(level.currentCatacomb).width + 20, (level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2f) + 25));
                 velocity = new Vector2(20, 190);
@@ -384,7 +402,7 @@ public class Player {
             } else {
                 viewportPosition.x = level.catacombs.get(level.currentCatacomb).position.x + (level.catacombs.get(level.currentCatacomb).width - 57.14f);
             }//try jumping left if the player tapped in the upper left corner of the screen
-        } else if (level.touchPosition.x < level.catacombs.get(level.currentCatacomb).position.x + 25 && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
+        } else if (level.touchPosition.x < level.catacombs.get(level.currentCatacomb).position.x + (ghost ? 15 : 25) && jumpState == Enums.JumpState.GROUNDED && (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Unlocked") || (level.catacombs.get(level.currentCatacomb).getLockedDoors().get(1).equals("Locked") && ghost)) && !level.catacombs.get(level.currentCatacomb).getLockedDoors().get(0).equals("Unlocked")) {
             if (position.x < level.catacombs.get(level.currentCatacomb).position.x + (200 / 3.5f)) {
                 level.viewportPosition.set(new Vector2(level.catacombs.get(level.currentCatacomb).position.x - 20, (level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).height / 2f) + 25));
                 velocity = new Vector2(-20, 190);
@@ -415,15 +433,21 @@ public class Player {
                 //with normal key
                 if (currentCatacomb.getLockedDoors().get(0).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(0, "Unlocked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 } else if (currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(0, "Locked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 }
                 //with doubleKey
                 if (currentCatacomb.getLockedDoors().get(0).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
                     currentCatacomb.getLockedDoors().set(0, "Unlocked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 }
                 //take away key after it is used
                 if ((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey")))) {
@@ -436,7 +460,9 @@ public class Player {
             //lock door
         } else if (currentCatacomb.getLockedDoors().get(0).equals("Unlocked") && jumpState != Enums.JumpState.JUMPING && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomLeft.x + currentCatacomb.bottomLeftOffset.x - 6, currentCatacomb.bottomLeft.y + currentCatacomb.bottomLeftOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
             currentCatacomb.getLockedDoors().set(0, "Locked");
-            level.gameplayScreen.sound6.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             level.inventory.deleteCurrentItem();
         }
             //return results to determine if player is outside catacomb's bounds
@@ -478,15 +504,21 @@ public class Player {
                 //with normal key
                 if (currentCatacomb.getLockedDoors().get(4).equals("Locked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(4, "Unlocked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 } else if (currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked") && heldItem.itemType.equals("key")) {
                     currentCatacomb.getLockedDoors().set(4, "Locked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 }
                 //with doubleKey
                 if (currentCatacomb.getLockedDoors().get(4).equals("DoubleLocked") && heldItem.itemType.equals("doubleKey")) {
                     currentCatacomb.getLockedDoors().set(4, "Unlocked");
+                    if (level.gameplayScreen.game.getSoundEffectsOn()) {
                     level.gameplayScreen.sound6.play();
+                }
                 }
                 //take away key after it is used
                 if ((heldItem.itemType.equals("key") || (heldItem.itemType.equals("doubleKey")))) {
@@ -499,7 +531,9 @@ public class Player {
             //lock door
         } else if (currentCatacomb.getLockedDoors().get(4).equals("Unlocked") && jumpState != Enums.JumpState.JUMPING && heldItem.itemType.equals("key") && level.touchPosition.dst(new Vector2(currentCatacomb.bottomRight.x + currentCatacomb.bottomRightOffset.x + 5.5f, currentCatacomb.bottomRight.y + currentCatacomb.bottomRightOffset.y + 10)) < (currentCatacomb.wallThickness + 4)) {
             currentCatacomb.getLockedDoors().set(4, "Locked");
-            level.gameplayScreen.sound6.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound6.play();
+                }
             level.inventory.deleteCurrentItem();
         }
         //return results to determine if player is outside catacomb's bounds

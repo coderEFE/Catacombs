@@ -70,6 +70,8 @@ public class Level extends InputAdapter {
 
     //player
     public Player player;
+    public Vector2 spawnposition;
+    public boolean spawnOverride;
     //Exit door
     public Exit exitDoor;
     //speechBubbles
@@ -173,7 +175,10 @@ public class Level extends InputAdapter {
 
         targetBox = new Target();
         //get player
-        player = new Player(new Vector2(100, 150), viewportPosition, this);
+        spawnposition = new Vector2(100, 150);
+        spawnOverride = false;
+        player = new Player(spawnposition, viewportPosition, this);
+        //stop back key from going to previous screen
         Gdx.input.setCatchBackKey(true);
     }
 
@@ -343,7 +348,9 @@ public class Level extends InputAdapter {
                     item.shadowOffset.set(new Vector2((player.getPosition().x - item.position.x) / -10, -2));
                     //if collected, let score or inventory pick it up
                     if (item.collected) {
-                        gameplayScreen.sound3.play();
+                        if (gameplayScreen.game.getSoundEffectsOn()) {
+                            gameplayScreen.sound3.play(0.2f);
+                        }
                         //if diamond, add to ScoreDiamonds (records how many diamonds you have collected in the level), else, add to inventory items
                         if (item.itemType.equals("diamond")) {
                             inventory.scoreDiamonds.add(new Diamond(new Vector2()));

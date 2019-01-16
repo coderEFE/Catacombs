@@ -52,7 +52,7 @@ public class Inventory {
     private float newItemOpacity;
     public boolean dragItem;
     public String message;
-    private float messageTimer;
+    float messageTimer;
 
     public Inventory (final Level level) {
         this.level = level;
@@ -73,22 +73,22 @@ public class Inventory {
         stage = "Main";
         resetButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Reset", 30, 30, Color.BLUE,
                 () -> stage="ValidateReset",
-                level);
+                level, null);
         homeButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Home", 30, 30, Color.BLUE,
                 () -> stage="ValidateHome",
-                level);
+                level, null);
         speechButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Speech", 30, 30, Color.BLUE,
                 () -> stage="ValidateSpeech",
-                level);
+                level, null);
         guideButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Guide", 30, 30, Color.BLUE,
                 () -> stage="Instructions",
-                level);
+                level, null);
         mapButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Map", 30, 30, Color.BLUE,
                 () -> stage = "Map",
-                level);
+                level, null);
         backButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Back", 20, 20, Color.BLUE,
                 () -> { stage = "Main"; playButton.playMove = 0; homeButton.doorMove = 0; resetButton.arrowMove = -200; },
-                level);
+                level, null);
         playButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Play", 50, 30, Color.BLUE,
                 () -> {
                     paused = false;
@@ -97,7 +97,7 @@ public class Inventory {
                     level.getPlayer().legRotate = 170;
                     level.getPlayer().startTime = TimeUtils.nanoTime();
                 },
-                level);
+                level, null);
         yesButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Yes", 30, 30, Color.BLUE,
                 () -> {
                     playButton.playMove = 0; homeButton.doorMove = 0; resetButton.arrowMove = -200;
@@ -105,6 +105,10 @@ public class Inventory {
                         case "ValidateReset":
                             level.superior.configureLevel(level);
                             level.getPlayer().spawnTimer = 0;
+                            //special case
+                            if (level.spawnOverride && level.superior.currentLevel == 10) {
+                                level.inventory.inventoryItems.add(new Item(new Vector2(0, 0), level.viewportPosition, "emerald"));
+                            }
                             break;
                         case "ValidateHome":
                             //save progress
@@ -128,10 +132,10 @@ public class Inventory {
                             break;
                     }
                 },
-                level);
+                level, null);
         noButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "No", 30, 30, Color.BLUE,
                 () -> { stage = "Main"; playButton.playMove = 0; homeButton.doorMove = 0; resetButton.arrowMove = -200; },
-                level);
+                level, null);
     }
 
     public void update () {
@@ -156,10 +160,13 @@ public class Inventory {
             playButton.update();
         }
         //click on new Item panel
-        if (newItem && level.touchPosition.x > (level.getPlayer().getPosition().x - 86) && level.touchPosition.x < (level.getPlayer().getPosition().x - 86) + 164 && level.touchPosition.y > (level.getPlayer().getPosition().y + 50) && level.touchPosition.y < (level.getPlayer().getPosition().y + 50) + (level.viewport.getWorldHeight() / 8f)) {
+        //level.touchPosition.x > (level.getPlayer().getPosition().x - 86) && level.touchPosition.x < (level.getPlayer().getPosition().x - 86) + 164 && level.touchPosition.y > (level.getPlayer().getPosition().y + 50) &&
+        if (newItem && level.touchPosition != (new Vector2()) && level.touchPosition.y > position.y + 5 && level.touchPosition.y < (level.getPlayer().getPosition().y + 50) + (level.viewport.getWorldHeight() / 8f)) {
             level.touchPosition = new Vector2();
             //play confirm sound
-            level.gameplayScreen.sound5.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound5.play();
+            }
             newItem = false;
             //save that you have already seen this item in preferences
             level.gameplayScreen.game.setItemCollected(true, level.collectedItemTypes.indexOf(newItemType, true));
@@ -249,7 +256,9 @@ public class Inventory {
                             newItemType = inventoryItems.get(selectedItem).itemType;
                             newItem = true;
                             //play sound
-                            level.gameplayScreen.sound4.play();
+                            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                                level.gameplayScreen.sound4.play();
+                            }
                         }
                     }
                 } else {

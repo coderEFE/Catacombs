@@ -66,4 +66,31 @@ public class CatacombsGame extends Game {
             return false;
         }
     }
+
+    //get whether sound effects are on
+    public boolean getSoundEffectsOn() {
+        return prefs.getSoundEffectsOn();
+    }
+    //should be called when player modifies settings in options menu
+    public void setSoundEffectsOn(boolean setSoundEffects) {
+        prefs.setSoundEffectsOn(setSoundEffects);
+    }
+
+    //get whether music is on
+    public boolean getMusicOn() {
+        return prefs.getMusicOn();
+    }
+    //should be called when player modifies settings in options menu
+    public void setMusicOn(boolean setMusic) {
+        prefs.setMusicOn(setMusic);
+    }
+
+    //set whether vibration is on
+    public boolean getVibrationOn() {
+        return prefs.getVibrationOn();
+    }
+    //should be called when player modifies settings in options menu
+    public void setVibrationOn(boolean setVibration) {
+        prefs.setVibrationOn(setVibration);
+    }
 }

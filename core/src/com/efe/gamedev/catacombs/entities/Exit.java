@@ -39,7 +39,9 @@ public class Exit {
 
     public void update (float delta) {
         if (!unlocked && level.getPlayer().getPosition().x > buttonPosition.x && level.getPlayer().getPosition().x < buttonPosition.x + 30 && level.getPlayer().getPosition().y > buttonPosition.y + 20 && level.getPlayer().getPosition().y < buttonPosition.y + 70) {
-            level.gameplayScreen.sound2.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound2.play();
+            }
             unlocked = true;
         }
         if (level.getPlayer().getPosition().x > position.x && level.getPlayer().getPosition().x < position.x + 30 && level.getPlayer().getPosition().y > position.y + 20 && level.getPlayer().getPosition().y < position.y + 70 && unlocked && level.getPlayer().jumpState == Enums.JumpState.GROUNDED && show) {

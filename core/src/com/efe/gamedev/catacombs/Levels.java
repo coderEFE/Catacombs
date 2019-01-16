@@ -493,7 +493,10 @@ public class Levels {
                             }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(100, 150));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(100, 150);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-50, -82), new Vector2(-100, -84), configuredLevel);
 
@@ -881,7 +884,10 @@ public class Levels {
                         () -> {}, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(300, -250));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(300, -250);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-350, -27), new Vector2(-170, -114), configuredLevel);
                 break;
@@ -1152,7 +1158,10 @@ public class Levels {
                             }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(100, 150));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(100, 150);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(850, -82), new Vector2(680, -169), configuredLevel);
                 break;
@@ -1258,7 +1267,10 @@ public class Levels {
                             }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(100, 150));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(100, 150);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(710, -167), new Vector2(550, -84), configuredLevel);
                 break;
@@ -1836,7 +1848,10 @@ public class Levels {
 
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-300, -135));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-300, -135);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-50, -452), new Vector2(0, -284), configuredLevel);
                 break;
@@ -2234,7 +2249,10 @@ public class Levels {
 
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-500, 235));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-500, 235);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-490, -392), new Vector2(-650, -309), configuredLevel);
                 configuredLevel.exitDoor.show = false;
@@ -2345,7 +2363,10 @@ public class Levels {
 
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-50, 65));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-50, 65);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-100, -422), new Vector2(400, -339), configuredLevel);
                 break;
@@ -2559,7 +2580,10 @@ public class Levels {
 
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-500, 65));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-500, 65);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door +18 y, +16 y
                 configuredLevel.exitDoor = new Exit(new Vector2(-350, -677), new Vector2(-690, -679), configuredLevel);
                 break;
@@ -2988,8 +3012,11 @@ public class Levels {
                         () -> {},
                         () -> { configuredLevel.show = false; configuredLevel.continueBubbles = false; }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
-                //-100, -20, test: -100, 320
-                configuredLevel.player.position.set(new Vector2(-100, -20));
+
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-100, -20);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door +18y, +16y
                 configuredLevel.exitDoor = new Exit(new Vector2(290, 343), new Vector2(1000, 1000), configuredLevel);
                 break;
@@ -3014,7 +3041,7 @@ public class Levels {
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-300, -875), "Closed", "Locked", "Closed", "Locked", "Locked", "Closed", configuredLevel));
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-150, -790), "Locked", "DoubleLocked", "Closed", "Closed", "Closed", "Closed", configuredLevel));
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-150, -960), "Closed", "Locked", "Closed", "Closed", "Closed", "Closed", configuredLevel));
-                configuredLevel.currentCatacomb = 0;
+                //configuredLevel.currentCatacomb = 0;
 
                 configuredLevel.items = new DelayedRemovalArray<>();
                 configuredLevel.items.add(new Item(new Vector2(-200, -155), configuredLevel.viewportPosition, "diamond"));
@@ -3134,7 +3161,10 @@ public class Levels {
                         () -> { configuredLevel.show = false; configuredLevel.continueBubbles = false; configuredLevel.catacombs.get(10).getLockedDoors().set(1, "Locked"); configuredLevel.catacombs.get(9).getLockedDoors().set(4, "Locked"); }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-50, 65));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-50, 65);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-50, -942), new Vector2(-230, -859), configuredLevel);
                 configuredLevel.exitDoor.show = false;
@@ -3294,9 +3324,12 @@ public class Levels {
                             configuredLevel.guards.get(2).talkToPlayer = false;
                             if ((configuredLevel.guards.get(0).guardTouchesPlayer() || configuredLevel.guards.get(1).guardTouchesPlayer() || configuredLevel.guards.get(2).guardTouchesPlayer()) && !configuredLevel.getPlayer().invisibility) { configuredLevel.pressUp = false; configuredLevel.verdict.verdict = false; configuredLevel.defeat = true; configuredLevel.verdict.verdictPhrase = "You were captured by a Guard!"; }
                         }, configuredLevel, -1));
-               configuredLevel.currentBubble = 0;
+                configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-220, -20));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-220, -20);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(460, -167), new Vector2(1000, 1000), configuredLevel);
                 break;
@@ -3420,7 +3453,10 @@ public class Levels {
                         () -> { configuredLevel.show = false; configuredLevel.continueBubbles = false; }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-50, 65));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-50, 65);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(0, 258), new Vector2(1000, 1000), configuredLevel);
                 configuredLevel.exitDoor.show = false;
@@ -3879,7 +3915,10 @@ public class Levels {
 
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(-480, 235));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-480, 235);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(0, 3), new Vector2(100, 171), configuredLevel);
                 break;
@@ -3903,7 +3942,7 @@ public class Levels {
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-400, 155), "Closed", "Locked", "Closed", "Closed", "Locked", "Closed", configuredLevel));
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-550, 240), "Closed", "Closed", "Closed", "Closed", "Locked", "Closed", configuredLevel));
                 configuredLevel.catacombs.add(new Catacomb(new Vector2(-550, 70), "Closed", "Closed", "Closed", "Closed", "Closed", "Closed", configuredLevel));
-                configuredLevel.currentCatacomb = 0;
+                //configuredLevel.currentCatacomb = 0;
 
                 configuredLevel.items = new DelayedRemovalArray<>();
                 configuredLevel.items.add(new Item(new Vector2(-80, -410), configuredLevel.viewportPosition, "gold"));
@@ -4692,8 +4731,11 @@ public class Levels {
                             configuredLevel.victory = true;
                         }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
-                //-230, (235-510) + 255
-                configuredLevel.player.position.set(new Vector2(-480, (235-510)));
+
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(-480, (235 - 510));
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(-480, 258), new Vector2(1000, 1000), configuredLevel);
                 break;
@@ -5142,7 +5184,10 @@ public class Levels {
                         () -> { configuredLevel.show = false; configuredLevel.continueBubbles = false; configuredLevel.touchLocked = false; }, configuredLevel, -1));
                 configuredLevel.currentBubble = 0;
 
-                configuredLevel.player.position.set(new Vector2(30, 65));
+                if (!configuredLevel.spawnOverride) {
+                    configuredLevel.spawnposition = new Vector2(30, 65);
+                }
+                configuredLevel.player.position.set(configuredLevel.spawnposition);
                 //exit door
                 configuredLevel.exitDoor = new Exit(new Vector2(190, 3), new Vector2(1000, 1000), configuredLevel);
                 break;
@@ -5150,6 +5195,8 @@ public class Levels {
     }
 
     public void update (Level configuredLevel, float delta) {
+        //Gdx.app.log(Levels.class.getName(), "override: " + configuredLevel.spawnOverride + ", position: " + configuredLevel.spawnposition + ", current: " + configuredLevel.currentCatacomb);
+
         //update individual stuff in each level: The speechBubble "triggers" are boolean values that activate the fourth run function in the speechBubble that the trigger it is set to, when the trigger is true.
         configuredLevel.getPlayer().spawn();
         if (currentLevel == 0) {

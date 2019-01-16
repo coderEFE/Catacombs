@@ -48,4 +48,34 @@ public class Prefs {
         getPref().putBoolean("itemCollected" + itemIndex, setCollected);
         getPref().flush();
     }
+
+    //get whether sound effects are on
+    public boolean getSoundEffectsOn() {
+        return getPref().getBoolean("soundEffectsOn", true);
+    }
+    //should be called when player modifies settings in options menu
+    public void setSoundEffectsOn(boolean setSoundEffects) {
+        getPref().putBoolean("soundEffectsOn", setSoundEffects);
+        getPref().flush();
+    }
+
+    //get whether music is on
+    public boolean getMusicOn() {
+        return getPref().getBoolean("musicOn", true);
+    }
+    //should be called when player modifies settings in options menu
+    public void setMusicOn(boolean setMusic) {
+        getPref().putBoolean("musicOn", setMusic);
+        getPref().flush();
+    }
+
+    //set whether vibration is on
+    public boolean getVibrationOn() {
+        return getPref().getBoolean("vibrationOn", true);
+    }
+    //should be called when player modifies settings in options menu
+    public void setVibrationOn(boolean setVibration) {
+        getPref().putBoolean("vibrationOn", setVibration);
+        getPref().flush();
+    }
 }

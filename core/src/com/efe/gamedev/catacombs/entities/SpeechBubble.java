@@ -120,19 +120,29 @@ public class SpeechBubble {
         //run option functions if option is pressed
         //play confirm sound when option is selected
         if (Options >= 1 && !option1.equals("") && level.show && option1Alpha > 0.95 && level.touchPosition.x > position.x - 15 && level.touchPosition.x < (position.x - 15) + (level.viewport.getWorldWidth() / 2.5f) && level.touchPosition.y > (position.y - level.viewport.getWorldHeight() / 4f) - (height == 20 ? 0 : 10) && level.touchPosition.y < ((position.y - level.viewport.getWorldHeight() / 4f) - (height == 20 ? 0 : 10)) + (level.viewport.getWorldHeight() / 5f)) {
-            level.gameplayScreen.sound5.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound5.play();
+            }
+            }
             function1.run();
         }
         if (Options >= 2 && !option2.equals("") && level.show && option2Alpha > 0.95 && level.touchPosition.x > (position.x - 15) + (level.viewport.getWorldWidth() / 2.2f) && level.touchPosition.x < (position.x - 15) + (level.viewport.getWorldWidth() / 2.2f) + (level.viewport.getWorldWidth() / 2.5f) && level.touchPosition.y > (position.y - level.viewport.getWorldHeight() / 4f) - (height == 20 ? 0 : 10) && level.touchPosition.y < ((position.y - level.viewport.getWorldHeight() / 4f) - (height == 20 ? 0 : 10)) + (level.viewport.getWorldHeight() / 5f)) {
-            level.gameplayScreen.sound5.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound5.play();
+            }
             function2.run();
         }
         if (Options >= 3 && !option3.equals("") && level.show && option3Alpha > 0.95 && level.touchPosition.x > position.x - 15 && level.touchPosition.x < (position.x - 15) + (level.viewport.getWorldWidth() / 2.5f) && level.touchPosition.y > (position.y - level.viewport.getWorldHeight() / 2f) - (height == 20 ? 0 : 10) && level.touchPosition.y < ((position.y - level.viewport.getWorldHeight() / 2f) - (height == 20 ? 0 : 10)) + (level.viewport.getWorldHeight() / 5f)) {
-            level.gameplayScreen.sound5.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound5.play();
+            }
             function3.run();
         }
         if (Options >= 4 && !option4.equals("") && level.show && option4Alpha > 0.95 && level.touchPosition.x > (position.x - 15) + (level.viewport.getWorldWidth() / 2.2f) && level.touchPosition.x < (position.x - 15) + (level.viewport.getWorldWidth() / 2.2f) + (level.viewport.getWorldWidth() / 2.5f) && level.touchPosition.y > (position.y - level.viewport.getWorldHeight() / 2f) - (height == 20 ? 0 : 10) && level.touchPosition.y < ((position.y - level.viewport.getWorldHeight() / 2f) - (height == 20 ? 0 : 10)) + (level.viewport.getWorldHeight() / 5f)) {
-            level.gameplayScreen.sound5.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound5.play();
+            }
             function4.run();
         }
         //press speechBubble skip button
@@ -145,7 +155,9 @@ public class SpeechBubble {
             //change current speechBubble to the one in speechBubbleSkip
             level.currentBubble = speechBubbleSkip;
             level.touchPosition.set(new Vector2());
-            level.gameplayScreen.sound1.play();
+            if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                level.gameplayScreen.sound1.play();
+            }
         }
     }
 

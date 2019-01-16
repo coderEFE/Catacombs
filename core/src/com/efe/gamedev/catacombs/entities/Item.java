@@ -122,8 +122,10 @@ public class Item {
             if (lasers.get(i).laserBounds().overlaps(playerBounds) && !level.getPlayer().duck && stungun.fire && lasers.size > 0 && lasers.get(i).enemyLaser) {
                 if (level.getPlayer().health > 0) {
                     level.getPlayer().health -= 2;
-                    // Vibrate device for 400 milliseconds
-                    Gdx.input.vibrate(400);
+                    if (level.gameplayScreen.game.getVibrationOn()) {
+                        // Vibrate device for 400 milliseconds
+                        Gdx.input.vibrate(400);
+                    }
                 }
                 lasers.removeIndex(i);
             }

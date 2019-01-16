@@ -198,7 +198,9 @@ public class Boss {
             if (laserTimer > 70) {
                 lasers.add(new Laser(new Vector2(position.x + 60, MathUtils.random(2) >= 1.2f ? position.y : position.y - 40), true, Enums.Facing.RIGHT));
                 lasersShot++;
-                level.gameplayScreen.sound7.play();
+                if (level.gameplayScreen.game.getSoundEffectsOn()) {
+                    level.gameplayScreen.sound7.play();
+                }
                 laserTimer = 0;
             }
         } else {
@@ -210,8 +212,10 @@ public class Boss {
                 if (lasers.get(i).laserBounds().overlaps(playerBounds) && ((lasers.get(i).position.y == position.y && !level.getPlayer().duck) || (lasers.get(i).position.y == position.y - 40 && (level.getPlayer().position.y < level.catacombs.get(level.currentCatacomb).position.y + level.catacombs.get(level.currentCatacomb).wallThickness + 64))) && lasers.size > 0 && lasers.get(i).enemyLaser) {
                     if (level.getPlayer().health > 0) {
                         level.getPlayer().health -= 2;
-                        // Vibrate device for 400 milliseconds
-                        Gdx.input.vibrate(400);
+                        if (level.gameplayScreen.game.getVibrationOn()) {
+                            // Vibrate device for 400 milliseconds
+                            Gdx.input.vibrate(400);
+                        }
                     }
                     lasers.removeIndex(i);
                 }
@@ -311,8 +315,10 @@ public class Boss {
                 if (position.dst(level.getPlayer().getPosition()) < 40 && level.getPlayer().health > 0) {
                     level.getPlayer().health -= (2.5f / 5f);
                     level.getPlayer().mouthState = Enums.MouthState.OPEN;
-                    // Vibrate device for 400 milliseconds
-                    Gdx.input.vibrate(400);
+                    if (level.gameplayScreen.game.getVibrationOn()) {
+                        // Vibrate device for 400 milliseconds
+                        Gdx.input.vibrate(400);
+                    }
                 }
                 heldItem.spear.strikeStatus = "PARRY";
             } else if (strikeTimer >= 25 && strikeTimer < 80) {
@@ -356,8 +362,10 @@ public class Boss {
                 if (position.dst(level.getPlayer().getPosition()) < 40 && smashTimer < 91 && level.getPlayer().health > 0) {
                     level.getPlayer().health -= (5f);
                     level.getPlayer().mouthState = Enums.MouthState.OPEN;
-                    // Vibrate device for 500 milliseconds
-                    Gdx.input.vibrate(500);
+                    if (level.gameplayScreen.game.getVibrationOn()) {
+                        // Vibrate device for 500 milliseconds
+                        Gdx.input.vibrate(500);
+                    }
                 }
             } else if (smashTimer >= 95) {
                 level.shake = false;

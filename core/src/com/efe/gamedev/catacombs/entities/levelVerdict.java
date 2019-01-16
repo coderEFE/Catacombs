@@ -45,8 +45,12 @@ public class levelVerdict {
                     //save progress
                     level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
                     level.superior.configureLevel(level); level.getPlayer().spawnTimer = 0;
+                    //special case
+                    if (level.spawnOverride && level.superior.currentLevel == 10) {
+                        level.inventory.inventoryItems.add(new Item(new Vector2(0, 0), level.viewportPosition, "emerald"));
+                    }
                 },
-                level);
+                level, null);
         homeButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Home", 30, 30, Color.RED,
                 () -> {
                     //save progress
@@ -57,13 +61,14 @@ public class levelVerdict {
                     level.gameplayScreen.game.setFurthestLevel(verdict ? (level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel) : level.superior.furthestLevel);
                     level.gameplayScreen.showMenuScreen();
                 },
-                level);
+                level, null);
         playButton = new Button(new Vector2(level.viewport.getWorldWidth() / 2f, level.viewport.getWorldHeight() / 2f), "Play", 50, 30, Color.RED,
                 () -> {
                     //save progress
                     if (level.inventory.scoreDiamonds.size >= level.gameplayScreen.game.getMaxDiamonds(level.superior.currentLevel)) {
                         level.gameplayScreen.game.setMaxDiamonds(level.inventory.scoreDiamonds.size, level.superior.currentLevel);
                     }
+                    level.spawnOverride = false;
                     if (level.superior.currentLevel != 14) {
                         //save progress
                         level.gameplayScreen.game.setFurthestLevel((level.superior.currentLevel == level.superior.furthestLevel ? level.superior.furthestLevel + 1 : level.superior.furthestLevel));
@@ -77,7 +82,7 @@ public class levelVerdict {
                         level.gameplayScreen.showMenuScreen();
                     }
                 },
-                level);
+                level, null);
     }
 
     public void update (float delta) {

@@ -72,11 +72,15 @@ public class HexagonButton {
             if (levelNum >= 0) {
                 menu.selectedLevel = levelNum;
             }
-            menu.sound5.play();
-            if (levelNum == -1 && !menu.showCredits) {
-                menu.showCredits = true;
-            } else if (levelNum == -2 && menu.showCredits) {
-                menu.showCredits = false;
+            if (menu.game.getSoundEffectsOn()) {
+                menu.sound5.play(0.5f);
+            }
+            if (levelNum == -1 && menu.menuStage.equals("MAIN")) {
+                menu.menuStage = "CREDITS";
+            } else if (levelNum == -2 && !menu.menuStage.equals("MAIN")) {
+                menu.menuStage = "MAIN";
+            } else if (levelNum == -3 && menu.menuStage.equals("MAIN")) {
+                menu.menuStage = "OPTIONS";
             }
         }
         //draw hexagons
@@ -97,6 +101,33 @@ public class HexagonButton {
             //back button icon
             renderer.setColor(darkColor);
             renderer.triangle(position.x + (viewport.getWorldWidth() / 20f), position.y + (viewport.getWorldWidth() / 10f), position.x + (viewport.getWorldWidth() / 7f), position.y + (viewport.getWorldWidth() / 20f), position.x + (viewport.getWorldWidth() / 7f), position.y + (viewport.getWorldWidth() / 7f));
+        } else if (levelNum == -3) {
+            //options button icon - a gear
+            //hollow circle with eight teeth on the outside
+            //circle for gear
+            renderer.setColor(darkColor);
+            renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 12f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 12f)) / 2f, viewport.getWorldWidth() / 12f, viewport.getWorldWidth() / 12f, 20);
+            renderer.setColor(lightColor);
+            renderer.ellipse(position.x + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 20f)) / 2f, position.y + ((viewport.getWorldWidth() / 5f) - (viewport.getWorldWidth() / 20f)) / 2f, viewport.getWorldWidth() / 20f, viewport.getWorldWidth() / 20f, 20);
+            //gear teeth
+            renderer.setColor(darkColor);
+            //top center
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 10f), position.y + (viewport.getWorldWidth() / 6.2f), position.x + (viewport.getWorldWidth() / 10f), position.y + viewport.getWorldWidth() / 7.5f, viewport.getWorldWidth() / 60f);
+            //bottom center
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 10f), position.y + (viewport.getWorldWidth() / 15f), position.x + (viewport.getWorldWidth() / 10f), position.y + viewport.getWorldWidth() / 25f, viewport.getWorldWidth() / 60f);
+            //left
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 6.2f), position.y + (viewport.getWorldWidth() / 10f), position.x + (viewport.getWorldWidth() / 7.5f), position.y + viewport.getWorldWidth() / 10f, viewport.getWorldWidth() / 60f);
+            //right
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 15f), position.y + (viewport.getWorldWidth() / 10f), position.x + (viewport.getWorldWidth() / 25f), position.y + viewport.getWorldWidth() / 10f, viewport.getWorldWidth() / 60f);
+            //top left
+            float offset = (viewport.getWorldWidth() / 60f);
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 25f) + offset, position.y + (viewport.getWorldWidth() / 6.2f) - offset, position.x + (viewport.getWorldWidth() / 15f) + offset, position.y + (viewport.getWorldWidth() / 7.5f) - offset, viewport.getWorldWidth() / 60f);
+            //top right
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 6.2f) - offset, position.y + (viewport.getWorldWidth() / 6.2f) - offset, position.x + (viewport.getWorldWidth() / 7.5f) - offset, position.y + (viewport.getWorldWidth() / 7.5f) - offset, viewport.getWorldWidth() / 60f);
+            //bottom left
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 15f) + offset, position.y + (viewport.getWorldWidth() / 15f) + offset, position.x + (viewport.getWorldWidth() / 25f) + offset, position.y + (viewport.getWorldWidth() / 25f) + offset, viewport.getWorldWidth() / 60f);
+            //bottom right
+            renderer.rectLine(position.x + (viewport.getWorldWidth() / 7.5f) - offset, position.y + (viewport.getWorldWidth() / 15f) + offset, position.x + (viewport.getWorldWidth() / 6.2f) - offset, position.y + (viewport.getWorldWidth() / 25f) + offset, viewport.getWorldWidth() / 60f);
         }
         //draw lock if button is locked
         if (levelNum == 0) {
