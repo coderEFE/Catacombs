@@ -3,6 +3,8 @@ package com.efe.gamedev.catacombs;
 //This is my first published game called "Catacombs". Enjoy!!!
 //Catacombs is created by Ethan F. Erickson
 
+//P.S. Why does Google make me publish updates to this app? I just want it to stay on the Play store
+
 import com.badlogic.gdx.Game;
 import com.efe.gamedev.catacombs.util.Prefs;
 

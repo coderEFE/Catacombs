@@ -3,10 +3,19 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Catacombs.iml" filepath="$PROJECT_DIR$/Catacombs.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/android.iml" filepath="$PROJECT_DIR$/android/android.iml" />
-      <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/desktop/desktop.iml" filepath="$PROJECT_DIR$/desktop/desktop.iml" />
-      <module fileurl="file://$PROJECT_DIR$/ios/ios.iml" filepath="$PROJECT_DIR$/ios/ios.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/Catacombs.android.iml" filepath="$PROJECT_DIR$/.idea/modules/android/Catacombs.android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/Catacombs.android.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/Catacombs.android.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/Catacombs.android.main.iml" filepath="$PROJECT_DIR$/.idea/modules/android/Catacombs.android.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/Catacombs.android.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/Catacombs.android.unitTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/Catacombs.core.iml" filepath="$PROJECT_DIR$/.idea/modules/core/Catacombs.core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/Catacombs.core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/Catacombs.core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/Catacombs.core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core/Catacombs.core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.main.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.test.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/Catacombs.desktop.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.test.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/Catacombs.ios.test.iml" />
     </modules>
   </component>
 </project>
